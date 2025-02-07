@@ -67,13 +67,3 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
             return x_new
         x = x_new
     raise ValueError("Maximum iterations reached. No solution found.")
-
-
-# def quadratic_function(x):
-#     return x[0] ** 2 + x[1] ** 2 + x[2] ** 2
-#
-#
-# initial_guess = np.array([1.0, 1.0, 1.0])
-# minimum = newton(quadratic_function, initial_guess)
-#
-# print(f"The minimum is at: {minimum}")
