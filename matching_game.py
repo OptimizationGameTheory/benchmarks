@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+import numpy as np
+import argparse
+from optimization import steepest_descent, newton
+from scipy.optimize import linear_sum_assignment
+
+def matching_potential(x, n, C, mu, lam):
+    """
+    Computes the potential function for the stable matching game.
+
+    In this formulation, we consider a matching between n men and n women.
+    Let x be a vector of length n*n that represents the flattened assignment matrix X,
+    where X[i,j] indicates the (continuous) degree to which man i is matched with woman j.
+    
+    The potential function is defined as:
+    
+        Phi(x) = <C, X> + (lambda/2) * ||x||^2 
+                 + (mu/2) * { penalty_rows + penalty_cols + penalty_bounds }
+    
+    where:
+      - <C, X> = sum_{i,j} C[i,j]*X[i,j] is the total matching cost,
+      - penalty_rows = sum_{i=1}^n (sum_j X[i,j] - 1)^2 ensures each man is assigned exactly one partner,
+      - penalty_cols = sum_{j=1}^n (sum_i X[i,j] - 1)^2 ensures each woman is assigned exactly one partner,
+      - penalty_bounds = sum_{i,j} (max(0, -X[i,j])^2 + max(0, X[i,j]-1)^2) penalizes assignments outside [0,1].
+    
+    Parameters:
+      x  : 1D numpy array of length n*n (flattened assignment matrix).
+      n  : Number of men/women.
+      C  : Cost matrix of shape (n, n), where C[i, j] is the cost (or dissatisfaction)
+           of matching man i with woman j.
+      mu : Penalty parameter for constraint violations.
+      lam: Regularization parameter to ensure strict convexity.
+      
+    Returns:
+      The scalar value of the potential function.
+    """
+    X = x.reshape((n, n))
+    # Linear cost term.
+    cost_term = np.sum(C * X)
+    # Regularization term.
+    reg_term = (lam / 2.0) * np.sum(x**2)
+    # Penalty for row sum constraints: each man must be matched exactly once.
+    penalty_rows = np.sum((np.sum(X, axis=1) - 1)**2)
+    # Penalty for column sum constraints: each woman must be matched exactly once.
+    penalty_cols = np.sum((np.sum(X, axis=0) - 1)**2)
+    # Penalty for bounds: each entry must lie in [0, 1].
+    penalty_bounds = np.sum(np.maximum(0, -X)**2 + np.maximum(0, X - 1)**2)
+    penalty = penalty_rows + penalty_cols + penalty_bounds
+    return cost_term + reg_term + (mu / 2.0) * penalty
+
+def load_cost_matrix(file_path, n):
+    """
+    Loads a cost matrix from a CSV file.
+
+    Parameters:
+      file_path: Path to the CSV file.
+      n        : Expected size of the matrix (n x n).
+      
+    Returns:
+      A numpy array of shape (n, n).
+    """
+    M = np.loadtxt(file_path, delimiter=',')
+    if M.shape != (n, n):
+        raise ValueError(f"Cost matrix shape {M.shape} does not match expected size ({n}, {n}).")
+    return M
+
+def main():
+    parser = argparse.ArgumentParser(description="Stable Matching Game via Continuous Optimization.")
+    parser.add_argument('--n', type=int, default=5, help='Number of men/women (default: 5)')
+    parser.add_argument('--cost_file', type=str, default=None,
+                        help='Path to CSV file containing the cost matrix (optional)')
+    parser.add_argument('--mu', type=float, default=1000.0,
+                        help='Penalty parameter mu (default: 1000.0)')
+    parser.add_argument('--lam', type=float, default=0.1,
+                        help='Regularization parameter lambda (default: 0.1)')
+    parser.add_argument('--alpha', type=float, default=0.001,
+                        help='Step size for steepest descent (default: 0.001)')
+    parser.add_argument('--tol', type=float, default=1e-6,
+                        help='Convergence tolerance (default: 1e-6)')
+    parser.add_argument('--max_iter', type=int, default=2000,
+                        help='Maximum iterations for steepest descent (default: 2000)')
+    parser.add_argument('--max_iter_newton', type=int, default=100,
+                        help='Maximum iterations for Newton’s method (default: 100)')
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Random seed for cost matrix generation (default: 42)')
+    
+    args = parser.parse_args()
+    
+    n = args.n
+    # Load cost matrix from file if provided; otherwise, generate a random cost matrix.
+    if args.cost_file:
+        C = load_cost_matrix(args.cost_file, n)
+    else:
+        np.random.seed(args.seed)
+        C = np.random.uniform(0, 10, size=(n, n))
+    
+    print("Stable Matching Game")
+    print("======================")
+    print(f"Number of men/women: {n}")
+    print("Cost matrix (C):")
+    print(C)
+    print()
+    
+    # Define the potential function as a function of x only.
+    potential_func = lambda x: matching_potential(x, n, C, args.mu, args.lam)
+    
+    # Initial guess: uniform assignment (each man assigns 1/n to every woman).
+    x0 = np.full((n, n), 1.0/n).flatten()
+    
+    # Solve using Steepest Descent.
+    print("Using Steepest Descent:")
+    x_sd = steepest_descent(potential_func, x0, alpha=args.alpha, convergence_tol=args.tol, max_iter=args.max_iter)
+    X_sd = x_sd.reshape((n, n))
+    print("Solution from Steepest Descent (assignment matrix):")
+    print(X_sd)
+    print(f"Potential value: {potential_func(x_sd):.6f}")
+    print()
+    
+    # Solve using Newton's Method.
+    print("Using Newton's Method:")
+    try:
+        x_newton = newton(potential_func, x0, convergence_tol=args.tol, max_iter=args.max_iter_newton)
+        X_newton = x_newton.reshape((n, n))
+        print("Solution from Newton's Method (assignment matrix):")
+        print(X_newton)
+        print(f"Potential value: {potential_func(x_newton):.6f}")
+    except ValueError as e:
+        print("Newton's Method encountered an error:", e)
+        X_newton = None
+    
+    # Compute the analytical optimal solution using the Hungarian Algorithm.
+    row_ind, col_ind = linear_sum_assignment(C)
+    X_opt = np.zeros((n, n))
+    for i, j in zip(row_ind, col_ind):
+        X_opt[i, j] = 1
+    optimal_cost = np.sum(C * X_opt)
+    
+    print()
+    print("Analytical Optimal Solution (via Hungarian Algorithm):")
+    print("Optimal assignment matrix:")
+    print(X_opt)
+    print(f"Optimal total cost: {optimal_cost:.6f}")
+    
+    # For comparison, compute the linear cost term from the numerical solutions.
+    def linear_cost(x):
+        X = x.reshape((n, n))
+        return np.sum(C * X)
+    
+    cost_sd = linear_cost(x_sd)
+    print()
+    print("Comparison of Linear Cost Terms:")
+    print(f"Steepest Descent Linear Cost: {cost_sd:.6f}")
+    if X_newton is not None:
+        cost_newton = linear_cost(x_newton)
+        print(f"Newton's Method Linear Cost: {cost_newton:.6f}")
+    print(f"Analytical Optimal Linear Cost: {optimal_cost:.6f}")
+    
+if __name__ == '__main__':
+    main()
