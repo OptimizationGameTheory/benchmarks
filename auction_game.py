@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
 import numpy as np
-import argparse
 from optimization import steepest_descent, newton
 
 def potential(z, v, mu=100.0):
@@ -24,19 +22,20 @@ def potential(z, v, mu=100.0):
     revenue_term = -np.sum(p)
     
     # Penalty for allocation bounds: x_i must be between 0 and 1.
-    penalty_alloc_bounds = np.sum(np.maximum(0, -x)**2) + np.sum(np.maximum(0, x - 1)**2)
+    penalty_alloc_bounds = np.sum(np.maximum(0, -x) ** 2) + np.sum(np.maximum(0, x - 1)**2)
     
     # Penalty for total allocation: sum(x) must be <= 1.
-    penalty_total_alloc = np.maximum(0, np.sum(x) - 1)**2
+    penalty_total_alloc = np.maximum(0, np.sum(x) - 1) ** 2
     
     # Penalty for payment non-negativity: p_i must be >= 0.
-    penalty_payment_nonneg = np.sum(np.maximum(0, -p)**2)
+    penalty_payment_nonneg = np.sum(np.maximum(0, -p) ** 2)
     
     # Penalty for individual rationality: p_i must be <= v_i * x_i.
-    penalty_ir = np.sum(np.maximum(0, p - v*x)**2)
+    penalty_ir = np.sum(np.maximum(0, p - v*x) ** 2)
     
     penalty = penalty_alloc_bounds + penalty_total_alloc + penalty_payment_nonneg + penalty_ir
-    return revenue_term + (mu/2.0) * penalty
+    return revenue_term + (mu / 2.0) * penalty
+
 
 def analytical_optimal_solution(v):
     """
@@ -55,23 +54,8 @@ def analytical_optimal_solution(v):
     p_opt[i_star] = v[i_star]
     return np.concatenate([x_opt, p_opt])
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Optimal Auction Design Optimization using Penalty Methods")
-    parser.add_argument('--valuations', type=str, required=True,
-                        help="Comma separated bidder valuations, e.g. '10,20,15'")
-    parser.add_argument('--mu', type=float, default=100.0,
-                        help="Penalty parameter mu (default: 100.0)")
-    parser.add_argument('--alpha', type=float, default=0.01,
-                        help="Step size for steepest descent (default: 0.01)")
-    parser.add_argument('--tol', type=float, default=1e-6,
-                        help="Convergence tolerance (default: 1e-6)")
-    parser.add_argument('--max_iter', type=int, default=1000,
-                        help="Maximum iterations for steepest descent (default: 1000)")
-    parser.add_argument('--max_iter_newton', type=int, default=100,
-                        help="Maximum iterations for Newton's method (default: 100)")
-    args = parser.parse_args()
 
+def main(args):
     # Parse bidder valuations from the input string.
     try:
         v_list = [float(val.strip()) for val in args.valuations.split(',')]
@@ -87,15 +71,14 @@ def main():
     x0 = np.ones(n) / n
     p0 = np.zeros(n)
     z0 = np.concatenate([x0, p0])
-    
+
     print("=== Optimal Auction Design Optimization ===")
     print("Bidder valuations:", v)
     print("Initial guess (allocations, payments):", z0)
 
     # Solve using Steepest Descent
     print("\n--- Running Steepest Descent ---")
-    z_sd = steepest_descent(potential_func, z0, alpha=args.alpha,
-                            convergence_tol=args.tol, max_iter=args.max_iter)
+    z_sd = steepest_descent(potential_func, z0, alpha=args.alpha, convergence_tol=args.tol, max_iter=args.max_iter, visualize=True, N=n, v=v, game_type='auction')
     print("Steepest Descent Solution (x and p):", z_sd)
     print("Potential function value (Steepest Descent):", potential_func(z_sd))
     revenue_sd = np.sum(z_sd[n:])
@@ -104,8 +87,7 @@ def main():
     # Solve using Newton's Method
     print("\n--- Running Newton's Method ---")
     try:
-        z_newton = newton(potential_func, z0, convergence_tol=args.tol,
-                          max_iter=args.max_iter_newton)
+        z_newton = newton(potential_func, z0, convergence_tol=args.tol, max_iter=args.max_iter_newton, visualize=True, N=n, v=v, game_type='auction')
         print("Newton's Method Solution (x and p):", z_newton)
         print("Potential function value (Newton):", potential_func(z_newton))
         revenue_newton = np.sum(z_newton[n:])
@@ -128,6 +110,7 @@ def main():
         print("Newton's Method Revenue Error: {:.6f}".format(abs(optimal_revenue - revenue_newton)))
     else:
         print("Newton's Method did not produce a solution.")
+
 
 if __name__ == '__main__':
     main()

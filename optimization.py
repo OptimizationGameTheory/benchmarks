@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from visualization import plot_congestion_distribution, plot_auction_allocation, plot_matching_assignment
 
 
 def gradient(f, x, h=1e-5):
@@ -39,26 +39,37 @@ def hessian(f, x, h=1e-5):
     return hess
 
 
-def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=True):
+def visualize_game(x, iteration, method, N, game_type, final=False, v=None):
+    if game_type == 'congestion':
+        plot_congestion_distribution(x, iteration, method, N, final)
+    elif game_type == 'auction':
+        plot_auction_allocation(x, v, iteration, method, final)
+    elif game_type == 'matching':
+        plot_matching_assignment(x, N, iteration, method, final)
+
+
+def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=True, N=None, v=None, game_type=None):
     x = np.copy(x0)
     history = [x]
     for i in range(max_iter):
         grad = grad_function(f, x)
         x_new = x - alpha * grad
         history.append(x_new)
+        if visualize and N is not None:
+            visualize_game(x_new, i, "Steepest Descent", N=N, v=v, game_type=game_type)
         if np.linalg.norm(x_new - x) < convergence_tol:
             print(f"Converged in {i + 1} iterations")
-            if visualize:
-                plot_optimization_path(f, history, title="Steepest Descent")
+            if visualize and N is not None:
+                visualize_game(x_new, i, "Steepest Descent", N=N, v=v, game_type=game_type, final=True)
             return x_new
         x = x_new
     print("Reached maximum iterations")
-    if visualize:
-        plot_optimization_path(f, history, title="Steepest Descent")
+    if visualize and N is not None:
+        visualize_game(x, max_iter, "Steepest Descent", N=N, v=v, game_type=game_type, final=True)
     return x
 
 
-def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=True):
+def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=True, v=None, N=None, game_type=None):
     x = np.copy(x0)
     history = [x]
     for i in range(max_iter):
@@ -71,22 +82,12 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
 
         x_new = x - np.dot(hess_inv, grad)
         history.append(x_new)
+        if visualize and N is not None:
+            visualize_game(x_new, i, "Newton Method", N=N, v=v, game_type=game_type)
         if np.linalg.norm(x_new - x) < convergence_tol:
             print(f"Converged in {i + 1} iterations")
-            if visualize:
-                plot_optimization_path(f, history, title="Newton Method")
+            if visualize and N is not None:
+                visualize_game(x_new, i, "Newton Method", N=N, v=v, game_type=game_type, final=True)
             return x_new
         x = x_new
     raise ValueError("Maximum iterations reached. No solution found.")
-
-
-def plot_optimization_path(f, history, title="Optimization Path", x_label="x", y_label="y"):
-    x_vals = history
-    y_vals = []
-    for x_val in x_vals:
-        y_vals.append(f(x_val))
-    plt.plot(x_vals, y_vals, 'ro-', markersize=5)
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.show()

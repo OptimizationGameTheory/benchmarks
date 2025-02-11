@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 import numpy as np
 import argparse
 from optimization import steepest_descent, newton
 from scipy.optimize import linear_sum_assignment
+
 
 def matching_potential(x, n, C, mu, lam):
     """
@@ -38,15 +38,16 @@ def matching_potential(x, n, C, mu, lam):
     # Linear cost term.
     cost_term = np.sum(C * X)
     # Regularization term.
-    reg_term = (lam / 2.0) * np.sum(x**2)
+    reg_term = (lam / 2.0) * np.sum(x ** 2)
     # Penalty for row sum constraints: each man must be matched exactly once.
-    penalty_rows = np.sum((np.sum(X, axis=1) - 1)**2)
+    penalty_rows = np.sum((np.sum(X, axis=1) - 1) ** 2)
     # Penalty for column sum constraints: each woman must be matched exactly once.
-    penalty_cols = np.sum((np.sum(X, axis=0) - 1)**2)
+    penalty_cols = np.sum((np.sum(X, axis=0) - 1) ** 2)
     # Penalty for bounds: each entry must lie in [0, 1].
-    penalty_bounds = np.sum(np.maximum(0, -X)**2 + np.maximum(0, X - 1)**2)
+    penalty_bounds = np.sum(np.maximum(0, -X) ** 2 + np.maximum(0, X - 1) ** 2)
     penalty = penalty_rows + penalty_cols + penalty_bounds
     return cost_term + reg_term + (mu / 2.0) * penalty
+
 
 def load_cost_matrix(file_path, n):
     """
@@ -64,62 +65,35 @@ def load_cost_matrix(file_path, n):
         raise ValueError(f"Cost matrix shape {M.shape} does not match expected size ({n}, {n}).")
     return M
 
-def main():
-    parser = argparse.ArgumentParser(description="Stable Matching Game via Continuous Optimization.")
-    parser.add_argument('--n', type=int, default=5, help='Number of men/women (default: 5)')
-    parser.add_argument('--cost_file', type=str, default=None,
-                        help='Path to CSV file containing the cost matrix (optional)')
-    parser.add_argument('--mu', type=float, default=1000.0,
-                        help='Penalty parameter mu (default: 1000.0)')
-    parser.add_argument('--lam', type=float, default=0.1,
-                        help='Regularization parameter lambda (default: 0.1)')
-    parser.add_argument('--alpha', type=float, default=0.001,
-                        help='Step size for steepest descent (default: 0.001)')
-    parser.add_argument('--tol', type=float, default=1e-6,
-                        help='Convergence tolerance (default: 1e-6)')
-    parser.add_argument('--max_iter', type=int, default=2000,
-                        help='Maximum iterations for steepest descent (default: 2000)')
-    parser.add_argument('--max_iter_newton', type=int, default=100,
-                        help='Maximum iterations for Newton’s method (default: 100)')
-    parser.add_argument('--seed', type=int, default=42,
-                        help='Random seed for cost matrix generation (default: 42)')
-    
-    args = parser.parse_args()
-    
-    n = args.n
-    # Load cost matrix from file if provided; otherwise, generate a random cost matrix.
-    if args.cost_file:
-        C = load_cost_matrix(args.cost_file, n)
-    else:
-        np.random.seed(args.seed)
-        C = np.random.uniform(0, 10, size=(n, n))
-    
+
+def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_newton):
     print("Stable Matching Game")
     print("======================")
     print(f"Number of men/women: {n}")
     print("Cost matrix (C):")
-    print(C)
+    print(cost_matrix)
     print()
-    
+
     # Define the potential function as a function of x only.
-    potential_func = lambda x: matching_potential(x, n, C, args.mu, args.lam)
-    
+    potential_func = lambda x: matching_potential(x, n, cost_matrix, mu, lam)
+
     # Initial guess: uniform assignment (each man assigns 1/n to every woman).
-    x0 = np.full((n, n), 1.0/n).flatten()
-    
+    x0 = np.full((n, n), 1.0 / n).flatten()
+
     # Solve using Steepest Descent.
     print("Using Steepest Descent:")
-    x_sd = steepest_descent(potential_func, x0, alpha=args.alpha, convergence_tol=args.tol, max_iter=args.max_iter)
+    x_sd = steepest_descent(potential_func, x0, alpha=alpha, convergence_tol=tol, max_iter=max_iter, visualize=True,
+                            N=n, game_type='matching')
     X_sd = x_sd.reshape((n, n))
     print("Solution from Steepest Descent (assignment matrix):")
     print(X_sd)
     print(f"Potential value: {potential_func(x_sd):.6f}")
     print()
-    
+
     # Solve using Newton's Method.
     print("Using Newton's Method:")
     try:
-        x_newton = newton(potential_func, x0, convergence_tol=args.tol, max_iter=args.max_iter_newton)
+        x_newton = newton(potential_func, x0, convergence_tol=tol, max_iter=max_iter_newton, visualize=True, N=n, game_type='matching')
         X_newton = x_newton.reshape((n, n))
         print("Solution from Newton's Method (assignment matrix):")
         print(X_newton)
@@ -129,23 +103,22 @@ def main():
         X_newton = None
     
     # Compute the analytical optimal solution using the Hungarian Algorithm.
-    row_ind, col_ind = linear_sum_assignment(C)
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
     X_opt = np.zeros((n, n))
     for i, j in zip(row_ind, col_ind):
         X_opt[i, j] = 1
-    optimal_cost = np.sum(C * X_opt)
-    
+    optimal_cost = np.sum(cost_matrix * X_opt)
+
     print()
     print("Analytical Optimal Solution (via Hungarian Algorithm):")
     print("Optimal assignment matrix:")
     print(X_opt)
     print(f"Optimal total cost: {optimal_cost:.6f}")
-    
+
     # For comparison, compute the linear cost term from the numerical solutions.
     def linear_cost(x):
         X = x.reshape((n, n))
-        return np.sum(C * X)
-    
+        return np.sum(cost_matrix * X)
     cost_sd = linear_cost(x_sd)
     print()
     print("Comparison of Linear Cost Terms:")
@@ -154,6 +127,20 @@ def main():
         cost_newton = linear_cost(x_newton)
         print(f"Newton's Method Linear Cost: {cost_newton:.6f}")
     print(f"Analytical Optimal Linear Cost: {optimal_cost:.6f}")
-    
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Stable Matching Game via Continuous Optimization.")
+    args = parser.parse_args()
+    n = args.n
+    if args.cost_file:
+        cost_matrix = load_cost_matrix(args.cost_file, n)
+    else:
+        np.random.seed(args.seed)
+        cost_matrix = np.random.uniform(0, 10, size=(n, n))
+
+    solve_matching_game(n, cost_matrix, args.mu, args.lam, args.alpha, args.tol, args.max_iter, args.max_iter_newton)
+
+
 if __name__ == '__main__':
     main()
