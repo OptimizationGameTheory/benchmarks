@@ -19,31 +19,37 @@ def plot_congestion_distribution(x, iteration, method, N, final=False):
     plt.pause(0.005)
 
 
-def plot_auction_allocation(z, v, iteration, method, final=False):
+def plot_auction_allocation(z, valuations, iteration, method, final=False):
     if iteration == 0:
         plt.ion()
         fig, ax1 = plt.subplots()
         plot_auction_allocation.fig = fig
         plot_auction_allocation.ax1 = ax1
+        plot_auction_allocation.ax2 = ax1.twinx()
     ax1 = plot_auction_allocation.ax1
+    ax2 = plot_auction_allocation.ax2
     ax1.clear()
-    n = len(v)
+    ax2.clear()
+    n = len(valuations)
     x = z[:n]
-    p = z[n:]
+    payments = z[n:]
 
     color = 'tab:blue'
-    ax1.set_xlabel('Bidders')
-    ax1.set_ylabel('Allocations', color=color)
-    ax1.bar(range(n), x, color=color)
+    ax1.bar(range(n), x, color=color, alpha=0.6)
     ax1.tick_params(axis='y', labelcolor=color)
 
-    ax2 = ax1.twinx()
     color = 'tab:orange'
-    ax2.set_ylabel('Payments', color=color)
-    ax2.plot(range(n), p, color=color)
+    ax2.plot(range(n), payments, color=color, marker='o', linestyle='-', linewidth=2)
     ax2.tick_params(axis='y', labelcolor=color)
 
-    plt.title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
+    ax1.set_title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
+    ax1.set_xticks(range(n))
+    ax1.set_xticklabels([f'Bidder {i+1}' for i in range(n)])
+    ax1.set_xlim(-0.5, n - 0.5)
+
+    ax1.legend(['Allocations'], loc='upper left')
+    ax2.legend(['Payments'], loc='upper right')
+    plt.tight_layout()
     plt.pause(0.5)
 
 
@@ -57,8 +63,7 @@ def plot_matching_assignment(x, n, iteration, method, final=False):
     # fig = plot_matching_assignment.fig
     ax.clear()
     X = x.reshape((n, n))
-    cax = ax.matshow(X, cmap='viridis')
-    # fig.colorbar(cax)
+    ax.matshow(X, cmap='viridis')
     ax.set_title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
     ax.set_xlabel("Women")
     ax.set_ylabel("Men")
