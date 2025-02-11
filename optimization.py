@@ -49,12 +49,12 @@ def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1
         if np.linalg.norm(x_new - x) < convergence_tol:
             print(f"Converged in {i + 1} iterations")
             if visualize:
-                plot_optimization_path(f, history)
+                plot_optimization_path(f, history, title="Steepest Descent")
             return x_new
         x = x_new
     print("Reached maximum iterations")
     if visualize:
-        plot_optimization_path(f, history)
+        plot_optimization_path(f, history, title="Steepest Descent")
     return x
 
 
@@ -74,19 +74,19 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
         if np.linalg.norm(x_new - x) < convergence_tol:
             print(f"Converged in {i + 1} iterations")
             if visualize:
-                plot_optimization_path(f, history)
+                plot_optimization_path(f, history, title="Newton Method")
             return x_new
         x = x_new
     raise ValueError("Maximum iterations reached. No solution found.")
 
 
-def plot_optimization_path(f, history):
+def plot_optimization_path(f, history, title="Optimization Path", x_label="x", y_label="y"):
     x_vals = history
     y_vals = []
     for x_val in x_vals:
         y_vals.append(f(x_val))
     plt.plot(x_vals, y_vals, 'ro-', markersize=5)
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Optimization Path')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
     plt.show()
