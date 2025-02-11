@@ -29,7 +29,7 @@ def congestion_potential(x, N, a1, b1, a2, b2):
 # -------------------------------
 # Main Routine
 # -------------------------------
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description="Solve the Congestion Game using Optimization Techniques.")
     parser.add_argument('--N', type=int, default=100, help='Total number of drivers')
     parser.add_argument('--a1', type=float, default=1.0, help='Coefficient for latency function of route 1')
@@ -40,19 +40,19 @@ if __name__ == '__main__':
     parser.add_argument('--tol', type=float, default=1e-8, help='Convergence tolerance')
     parser.add_argument('--max_iter', type=int, default=1000, help='Maximum iterations for steepest descent')
     parser.add_argument('--max_iter_newton', type=int, default=100, help='Maximum iterations for Newton’s method')
-    
+
     args = parser.parse_args()
 
     # Initial guess: assume initially half the drivers choose route 1.
     x0 = np.array([args.N / 2])
-    
+
     print("\nCongestion Game on a Network")
     print("------------------------------")
     print(f"Total drivers: {args.N}")
     print(f"Route 1: L(x) = {args.a1} * x + {args.b1}")
     print(f"Route 2: L(x) = {args.a2} * x + {args.b2}")
     print()
-    
+
     # Using Steepest Descent
     print("Using Steepest Descent:")
     x_sd = steepest_descent(lambda x: congestion_potential(x, args.N, args.a1, args.b1, args.a2, args.b2),
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print(f"Drivers on route 2: {args.N - x_sd[0]:.6f}")
     print(f"Potential value: {congestion_potential(x_sd, args.N, args.a1, args.b1, args.a2, args.b2):.6f}")
     print()
-    
+
     # Using Newton's Method
     print("Using Newton's Method:")
     try:
@@ -72,9 +72,13 @@ if __name__ == '__main__':
         print(f"Potential value: {congestion_potential(x_newton, args.N, args.a1, args.b1, args.a2, args.b2):.6f}")
     except ValueError as e:
         print("Newton's Method encountered an error:", e)
-    
+
     # Expected Equilibrium Calculation
     expected_x = (args.a2 * args.N + args.b2 - args.b1) / (args.a1 + args.a2)
     print("\nExpected Equilibrium (analytical):")
     print(f"Load on route 1: {expected_x:.6f}")
     print(f"Load on route 2: {args.N - expected_x:.6f}")
+
+
+if __name__ == '__main__':
+    main()
