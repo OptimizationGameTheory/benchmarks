@@ -79,7 +79,7 @@ The design also imposes key constraints:
 - **Allocation Constraints:** Each allocation $x_i$ must be in $[0,1]$ and the total allocation must satisfy $\sum_{i=1}^{n} x_i \leq 1$.
 
 - **Nonnegative Payments:** $p_i \geq 0$.  
-The analytical optimal solution is obtained by allocating the entire good to the bidder with the highest valuation, i.e., if $i^* = \arg\max(v_i)$ then set $x_{i^*} = 1$ and $p_{i^*} = v_{i^*}$ (with all other $x_i$ and $p_i$ set to zero), yielding $R^* = \max(v_i)$.
+The analytical optimal solution is obtained by allocating the entire good to the bidder with the highest valuation, i.e., if $i^\ast = \arg\max(v_i)$ then set $x_{i^\ast} = 1$ and $p_{i^\ast} = v_{i^\ast}$ (with all other $x_i$ and $p_i$ set to zero), yielding $R^\ast = \max(v_i)$.
 
 Numerical optimization is performed using both the Steepest Descent and Newton’s Methods. These routines iteratively minimize the potential function, with parameters such as the step size (`alpha`), convergence tolerance (`tol`), and maximum iterations adjusted to ensure reliable convergence. The numerical solution is then compared against the analytical optimal allocation to evaluate performance.
 
@@ -130,7 +130,7 @@ $$
 $$  
 and therefore,  
 $$
-x^* = \frac{a_2 N + b_2 - b_1}{a_1 + a_2}.
+x^\ast = \frac{a_2 N + b_2 - b_1}{a_1 + a_2}.
 $$
 
 The potential function is minimized using numerical optimization techniques—specifically, the Steepest Descent and Newton’s Methods—to determine the optimal distribution of drivers. As with the auction design, penalty functions and convergence parameters (`alpha`, `tol`, `max_iter`, etc.) are tuned to ensure that the algorithm converges to the analytical equilibrium. The computed equilibrium distribution is then compared with the expected analytical result.
@@ -163,7 +163,7 @@ We consider a matching market with **n men** and **n women**. A cost matrix $C$ 
 $$
 \Phi(x) = \langle C, X \rangle + \frac{\lambda}{2} \|x\|^2 + \frac{\mu}{2}\Biggl[ \sum_{i=1}^{n} \Bigl(\sum_{j=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{j=1}^{n} \Bigl(\sum_{i=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{i,j}\Bigl(\max(0, -X_{ij})^2 + \max(0, X_{ij}-1)^2\Bigr) \Biggr],
 $$  
-where $\langle C, X \rangle$ denotes the total matching cost, $\lambda$ is a regularization parameter ensuring strict convexity, and $\mu$ is a penalty parameter enforcing the matching constraints. The analytical optimal solution is obtained via the Hungarian algorithm, which computes a binary assignment matrix $X^*$ that minimizes $\langle C, X^* \rangle$ under the one-to-one matching constraints.
+where $\langle C, X \rangle$ denotes the total matching cost, $\lambda$ is a regularization parameter ensuring strict convexity, and $\mu$ is a penalty parameter enforcing the matching constraints. The analytical optimal solution is obtained via the Hungarian algorithm, which computes a binary assignment matrix $X^\ast$ that minimizes $\langle C, X^\ast \rangle$ under the one-to-one matching constraints.
 
 The potential function for the stable matching problem is minimized using numerical optimization techniques—Steepest Descent and Newton’s Methods. The implementation integrates penalty terms to enforce the assignment and bound constraints, and uses a regularization parameter $\lambda$ for convexity. The continuous solution is then compared against the optimal binary matching computed using the Hungarian algorithm (via `scipy.optimize.linear_sum_assignment`).
 
