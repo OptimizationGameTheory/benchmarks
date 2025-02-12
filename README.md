@@ -169,7 +169,7 @@ The potential function for the stable matching problem is minimized using numeri
 
 #### Implementation Usage
 
-Run the stable matching script from the command line. For instance, to run with a randomly generated 5×5 cost matrix, simply execute:
+Run the stable matching script from the command line. For instance, to run with a randomly generated $5\times5$ cost matrix, simply execute:
 
 ```sh
 python matching_game.py
@@ -221,7 +221,7 @@ In contrast, the Stable Matching problem poses unique challenges due to the near
 Advancing the current framework can be approached along several complementary axes:
 
 - **Parameter Tuning:**
-Future work will explore adaptive strategies for dynamically adjusting penalty parameters (μ) and regularization terms (λ). Such adaptive schemes could automatically balance the trade-off between constraint enforcement and objective minimization, thereby enhancing convergence rates and solution accuracy.
+Future work will explore adaptive strategies for dynamically adjusting penalty parameters ($\mu$) and regularization terms ($\lambda$). Such adaptive schemes could automatically balance the trade-off between constraint enforcement and objective minimization, thereby enhancing convergence rates and solution accuracy.
 
 - **Algorithmic Enhancements:**
 The incorporation of advanced optimization techniques is a promising avenue. Implementing quasi-Newton methods (e.g., BFGS and L-BFGS) and integrating trust-region frameworks could provide improved convergence behavior, particularly in problems where the Hessian information is unreliable. Additionally, exploring variants of stochastic gradient descent may prove beneficial in handling large-scale or noisy optimization scenarios.
