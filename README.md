@@ -63,13 +63,13 @@ The `main.py` script serves as the central driver for the project, coordinating 
 #### Problem Formulation
 
 We consider an auction setting where an auctioneer allocates a **divisible** good to *n* bidders, each possessing a private valuation $v_i$. The auctioneer determines the allocation $x_i$ (the fraction of the good assigned to bidder $i$) and the corresponding payment $p_i$. The objective is to maximize total revenue  
-$$
+```math
 R = \sum_{i=1}^{n} p_i
-$$  
+```
 Since conventional optimization routines are designed for minimization, the problem is reformulated by minimizing the negative revenue with added penalty terms to enforce feasibility constraints:  
-$$
+```math
 \Phi(z) = -\sum_{i=1}^{n} p_i + \frac{\mu}{2} \text{ (Penalty Terms)}
-$$
+```
 where $\mu$ is a penalty parameter enforcing the constraints.
 
 The design also imposes key constraints:
@@ -113,25 +113,25 @@ python auction_game.py --valuations "15,25,30" --mu 200 --alpha 0.005 --tol 1e-8
 #### Problem Formulation
 
 We consider a congestion game on a network with two routes. Route 1 has a latency function given by  
-$$
+```math
 L_1(x) = a_1 x + b_1,
-$$  
+```
 and Route 2 has  
-$$
+```math
 L_2(x) = a_2 x + b_2.
-$$  
+```
 There are $N$ drivers who must be allocated between these routes. The equilibrium is determined by minimizing the potential function:  
-$$
+```math
 \Phi(x) = \frac{1}{2} a_1 x^2 + b_1 x + \frac{1}{2} a_2 (N - x)^2 + b_2 (N - x),
-$$  
+```
 where $x$ represents the number of drivers on Route 1 (and $N - x$ on Route 2). The analytical equilibrium is obtained by setting the derivative to zero, leading to  
-$$
+```math
 (a_1 + a_2)x = a_2 N + b_2 - b_1,
-$$  
+```
 and therefore,  
-$$
+```math
 x^\ast = \frac{a_2 N + b_2 - b_1}{a_1 + a_2}.
-$$
+```
 
 The potential function is minimized using numerical optimization techniques—specifically, the Steepest Descent and Newton’s Methods—to determine the optimal distribution of drivers. As with the auction design, penalty functions and convergence parameters (`alpha`, `tol`, `max_iter`, etc.) are tuned to ensure that the algorithm converges to the analytical equilibrium. The computed equilibrium distribution is then compared with the expected analytical result.
 
@@ -160,9 +160,9 @@ Command-line arguments include:
 #### Problem Formulation
 
 We consider a matching market with **n men** and **n women**. A cost matrix $C$ of size $n \times n$ is provided, where $C[i,j]$ represents the cost (or dissatisfaction) of matching man $i$ with woman $j$. The goal is to minimize the total matching cost subject to assignment constraints (each man is matched to exactly one woman, and vice versa) and feasibility bounds (each element $X[i,j]$ of the assignment matrix must lie within $[0, 1]$). The continuous formulation defines the potential function as:  
-$$
+```math
 \Phi(x) = \langle C, X \rangle + \frac{\lambda}{2} \|x\|^2 + \frac{\mu}{2}\Biggl[ \sum_{i=1}^{n} \Bigl(\sum_{j=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{j=1}^{n} \Bigl(\sum_{i=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{i,j}\Bigl(\max(0, -X_{ij})^2 + \max(0, X_{ij}-1)^2\Bigr) \Biggr],
-$$  
+```
 where $\langle C, X \rangle$ denotes the total matching cost, $\lambda$ is a regularization parameter ensuring strict convexity, and $\mu$ is a penalty parameter enforcing the matching constraints. The analytical optimal solution is obtained via the Hungarian algorithm, which computes a binary assignment matrix $X^\ast$ that minimizes $\langle C, X^\ast \rangle$ under the one-to-one matching constraints.
 
 The potential function for the stable matching problem is minimized using numerical optimization techniques—Steepest Descent and Newton’s Methods. The implementation integrates penalty terms to enforce the assignment and bound constraints, and uses a regularization parameter $\lambda$ for convexity. The continuous solution is then compared against the optimal binary matching computed using the Hungarian algorithm (via `scipy.optimize.linear_sum_assignment`).
