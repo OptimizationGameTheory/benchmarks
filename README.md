@@ -94,8 +94,8 @@ python auction_game.py --valuations "10,20,15"
 Command-line arguments include: 
 
 - `--valuations`: Comma-separated list of bidder valuations (e.g., `"10,20,15"`).  
-- `--mu`: Penalty coefficient (default: `100.0`).  
-- `--alpha`: Step size for steepest descent (default: `0.01`).  
+- `--mu`: Penalty coefficient (default: `10.0`).  
+- `--alpha`: Step size for steepest descent (default: `0.001`).  
 - `--tol`: Convergence criterion (default: `1e-6`).  
 - `--max_iter`: Maximum iterations for steepest descent (default: `1000`).  
 - `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`).  
@@ -210,11 +210,15 @@ python matching_game.py --n 6 --mu 2000 --lam 0.2 --alpha 0.0005 --max_iter 5000
 
 ## Results and Discussion
 
-Our experimental analysis indicates that the effectiveness of the optimization methods varies with the characteristics of the underlying problem. In the Auction Design problem, the objective function is highly sensitive to the enforcement of economic constraints via penalty terms. Both the steepest descent and Newton’s methods can converge to a solution that approximates the analytical optimum; however, steepest descent tends to be more robust in scenarios where the penalty terms introduce mild nonlinearity, while Newton’s method may deliver faster convergence when the Hessian is well-conditioned. Consequently, careful parameter tuning is essential in auction design to balance convergence speed against numerical stability.
+Our experimental analysis highlights the varying effectiveness of optimization methods across different problem domains.
 
-For the Congestion on Networks problem, the potential function exhibits a clear quadratic structure. In such settings, Newton’s method benefits from the strong curvature information provided by the Hessian and can converge rapidly. Nevertheless, steepest descent offers a more straightforward implementation with robust performance, albeit at the cost of increased iterations. The inherent structure of the congestion problem renders both methods effective, with the choice largely depending on the computational resources available and the desired convergence rate.
+In the auction design problem, the steepest descent method produces a solution but exhibits extreme numerical instability, often yielding values far from the analytical optimum. This suggests that improper parameter selection—such as an overly large step size or high penalty term—leads to divergence. Careful tuning of parameters, including a smaller step size ($\alpha$) and moderate penalty coefficient ($\mu$), is necessary to stabilize convergence. Newton’s method, on the other hand, fails entirely due to an ill-conditioned Hessian, making matrix inversion impossible. This is expected, as the penalty terms introduce nontrivial nonlinearity. To address this, a small regularization term ($\epsilon I$) can be added to the Hessian before inversion, improving numerical stability and allowing Newton’s method to converge when feasible.
 
-In contrast, the Stable Matching problem poses unique challenges due to the near-linear nature of its potential function. Under these conditions, the reliance of Newton’s method on second-order derivative information becomes less beneficial, leading to instability or non-convergence. Steepest descent, although generally slower and more sensitive to parameter choices, demonstrates a higher degree of robustness for this problem class. However, the continuous relaxation inherent in the formulation can lead to significant approximation errors when compared to the discrete optimal solution. Overall, the matching problem appears to favor methods that prioritize stability over rapid convergence.
+For congestion optimization, the potential function follows a well-structured quadratic form. This allows Newton’s method to leverage second-order curvature information for rapid convergence, making it the preferred approach when computational efficiency is a priority. However, when the Hessian is poorly conditioned or computational constraints limit matrix inversion, steepest descent remains a robust alternative. While it requires more iterations, it consistently finds solutions, making it preferable in cases where stability is more important than speed. The trade-off between the two methods largely depends on resource availability and the scale of the network.
+
+The stable matching problem introduces additional challenges due to its near-linear potential function, which diminishes the advantages of Newton’s method. Without strong curvature information, Newton’s updates become unstable, leading to non-convergence. Steepest descent, while sensitive to step size selection, remains the more reliable approach. However, the continuous relaxation used in this optimization framework may introduce significant approximation errors compared to the discrete optimal solution. To improve Newton’s method’s performance in this setting, incorporating a smoothed potential function or adaptive Hessian regularization may help mitigate instability and enable better convergence.
+
+Overall, our findings underscore the importance of parameter tuning and method selection in each optimization problem. The choice between steepest descent and Newton’s method depends not only on the structure of the objective function but also on numerical stability considerations and computational feasibility.
 
 ## Future Directions
 

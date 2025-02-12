@@ -25,9 +25,9 @@ def add_parser_args(parser):
     auction_parser = subparsers.add_parser('auction', help='Solve the auction game')
     auction_parser.add_argument('--valuations', type=str, required=True,
                                 help="Comma separated bidder valuations, e.g. '10,20,15'")
-    auction_parser.add_argument('--mu', type=float, default=100.0, help="Penalty parameter mu (default: 100.0)")
-    auction_parser.add_argument('--alpha', type=float, default=0.01,
-                                help="Step size for steepest descent (default: 0.01)")
+    auction_parser.add_argument('--mu', type=float, default=10.0, help="Penalty parameter mu (default: 10.0)")
+    auction_parser.add_argument('--alpha', type=float, default=0.001,
+                                help="Step size for steepest descent (default: 0.001)")
     auction_parser.add_argument('--tol', type=float, default=1e-6, help="Convergence tolerance (default: 1e-6)")
     auction_parser.add_argument('--max_iter', type=int, default=1000,
                                 help="Maximum iterations for steepest descent (default: 1000)")
