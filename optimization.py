@@ -52,32 +52,43 @@ def visualize_game(x, iteration, method, N, game_type, final=False, valuations=N
         plt.savefig(f"visualizations/{game_type}_{method}_iteration_{iteration}.png")
 
 
-
-def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False, N=None, valuations=None, game_type=None):
+def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False,
+                     N=None, valuations=None, game_type=None):
     x = np.copy(x0)
-    history = [x]
+    history = []
+    converged = False
     for i in range(max_iter):
+        history.append(x)
+        if visualize and N is not None:
+            visualize_game(x, i, "Steepest Descent", N=N, valuations=valuations, game_type=game_type, final=converged)
+        if converged:
+            print(f"Converged in {i} iterations")
+            return x
         grad = grad_function(f, x)
         x_new = x - alpha * grad
-        history.append(x_new)
-        if visualize and N is not None:
-            visualize_game(x_new, i, "Steepest Descent", N=N, valuations=valuations, game_type=game_type)
         if np.linalg.norm(x_new - x) < convergence_tol:
-            print(f"Converged in {i + 1} iterations")
-            if visualize and N is not None:
-                visualize_game(x_new, i, "Steepest Descent", N=N, valuations=valuations, game_type=game_type, final=True)
-            return x_new
+            converged = True
         x = x_new
+
     print("Reached maximum iterations")
     if visualize and N is not None:
         visualize_game(x, max_iter, "Steepest Descent", N=N, valuations=valuations, game_type=game_type, final=True)
     return x
 
 
-def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=False, valuations=None, N=None, game_type=None):
+def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=False,
+           valuations=None, N=None, game_type=None):
     x = np.copy(x0)
-    history = [x]
+    history = []
+    converged = False
     for i in range(max_iter):
+        history.append(x)
+        if visualize and N is not None:
+            visualize_game(x, i, "Newton Method", N=N, valuations=valuations, game_type=game_type, final=converged)
+        if converged:
+            print(f"Converged in {i} iterations")
+            return x
+
         grad = grad_function(f, x)
         hess = hessian_function(f, x)
         try:
@@ -86,13 +97,12 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
             raise ValueError("Hessian is not invertible. No solution found.")
 
         x_new = x - np.dot(hess_inv, grad)
-        history.append(x_new)
-        if visualize and N is not None:
-            visualize_game(x_new, i, "Newton Method", N=N, valuations=valuations, game_type=game_type)
         if np.linalg.norm(x_new - x) < convergence_tol:
-            print(f"Converged in {i + 1} iterations")
-            if visualize and N is not None:
-                visualize_game(x_new, i, "Newton Method", N=N, valuations=valuations, game_type=game_type, final=True)
-            return x_new
+            converged = True
         x = x_new
-    raise ValueError("Maximum iterations reached. No solution found.")
+
+    print("Reached maximum iterations.")
+    if visualize and N is not None:
+        visualize_game(x, max_iter, "Newton Method", N=N, valuations=valuations, game_type=game_type, final=True)
+    return x
+
