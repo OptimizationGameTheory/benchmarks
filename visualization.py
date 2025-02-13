@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def plot_congestion_distribution(x, iteration, method, N, final=False):
     if iteration == 0:
@@ -54,19 +54,37 @@ def plot_auction_allocation(z, valuations, iteration, method, final=False):
 
 
 def plot_matching_assignment(x, n, iteration, method, final=False):
+    X = x.reshape((n, n))
     if iteration == 0:
         plt.ion()
         fig, ax = plt.subplots()
         plot_matching_assignment.fig = fig
         plot_matching_assignment.ax = ax
+        # Create the table once
+        colors = plt.cm.viridis(np.linspace(0, 1, n))
+        labels = [f'Quality {i}' for i in range(n)]
+        table_data = [[label] for label in labels]
+        plot_matching_assignment.table = plt.table(cellText=table_data, colLabels=['Match Quality'],
+                                                   cellColours=[[color] for color in colors], cellLoc='center',
+                                                   loc='right', bbox=[1.1, 0.1, 0.2, 0.8])
+        plot_matching_assignment.table.auto_set_font_size(False)
+        plot_matching_assignment.table.set_fontsize(10)
     ax = plot_matching_assignment.ax
-    # fig = plot_matching_assignment.fig
     ax.clear()
-    X = x.reshape((n, n))
-    ax.matshow(X, cmap='viridis')
+    cax = ax.matshow(X, cmap='viridis')
     ax.set_title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
     ax.set_xlabel("Women")
     ax.set_ylabel("Men")
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
+
+    # Add color legend with min and max labels
+    if iteration == 0:
+        cbar = plot_matching_assignment.fig.colorbar(cax, ax=ax, orientation='vertical')
+        cbar.set_label('Match Quality')
+        plot_matching_assignment.cbar = cbar
+    cbar = plot_matching_assignment.cbar
+    cbar.set_ticks([x.min(), x.max()])
+    cbar.set_ticklabels([f'{x.min():.2f}', f'{x.max():.2f}'])
+
     plt.pause(0.2)
