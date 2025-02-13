@@ -88,7 +88,7 @@ Numerical optimization is performed using both the Steepest Descent and Newtonâ€
 Execute the script from the command line. For example, to run the auction design for three bidders with valuations 10, 20, and 15, use:  
 
 ```sh
-python auction_game.py --valuations "10,20,15"
+python main.py auction --valuations "10,20,15"
 ```  
 
 Command-line arguments include: 
@@ -103,7 +103,7 @@ Command-line arguments include:
 For example, to use custom parameters, run:  
 
 ```sh
-python auction_game.py --valuations "15,25,30" --mu 200 --alpha 0.005 --tol 1e-8
+python main.py auction --valuations "15,25,30" --mu 200 --alpha 0.005 --tol 1e-8
 ```  
 
 ---
@@ -140,7 +140,7 @@ The potential function is minimized using numerical optimization techniquesâ€”sp
 Run the congestion game script from the terminal. For example, to simulate 100 drivers with specified latency parameters, execute:
 
 ```sh
-python congestion_game.py --N 100 --a1 1.0 --b1 0.0 --a2 2.0 --b2 10.0
+python main.py congestion --N 100 --a1 1.0 --b1 0.0 --a2 2.0 --b2 10.0
 ``` 
 
 Command-line arguments include:
@@ -172,13 +172,13 @@ The potential function for the stable matching problem is minimized using numeri
 Run the stable matching script from the command line. For instance, to run with a randomly generated $5\times5$ cost matrix, simply execute:
 
 ```sh
-python matching_game.py
+python main.py matching
 ```
 
 To run with a custom cost matrix from a CSV file (where each row represents a man and each column a woman), use:
 
 ```sh
-python matching_game.py --n 4 --cost_file cost_matrix.csv
+python main.py matching --n 4 --cost_file cost_matrix.csv
 ```
 
 An example `cost_matrix.csv` might contain:
