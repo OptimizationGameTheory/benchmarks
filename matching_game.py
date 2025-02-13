@@ -124,7 +124,7 @@ def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_
     print("Comparison of Linear Cost Terms:")
     print(f"Steepest Descent Linear Cost: {cost_sd:.6f}")
     if X_newton is not None:
-        cost_newton = linear_cost(x_newton)
+        cost_newton = linear_cost(X_newton)
         print(f"Newton's Method Linear Cost: {cost_newton:.6f}")
     print(f"Analytical Optimal Linear Cost: {optimal_cost:.6f}")
 

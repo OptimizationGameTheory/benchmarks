@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 from visualization import plot_congestion_distribution, plot_auction_allocation, plot_matching_assignment
 
 
@@ -46,6 +47,10 @@ def visualize_game(x, iteration, method, N, game_type, final=False, valuations=N
         plot_auction_allocation(x, valuations, iteration, method, final)
     elif game_type == 'matching':
         plot_matching_assignment(x, N, iteration, method, final)
+
+    if iteration % 10 == 0 or final:
+        plt.savefig(f"visualizations/{game_type}_{method}_iteration_{iteration}.png")
+
 
 
 def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False, N=None, valuations=None, game_type=None):
