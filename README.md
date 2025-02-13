@@ -1,291 +1,187 @@
 # Introduction to Optimization: Optimization Techniques in Game Theoretic Problems
 
----
----
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/) 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Optimal Auction Design
+## Table of Contents
 
-### Overview
-This part of the project investigates the application of numerical optimization techniques to the problem of optimal auction design for revenue maximization. The auctioneer seeks to allocate a divisible good among multiple bidders while satisfying key economic constraints such as individual rationality and feasibility. 
+1. [Overview](#overview)
+2. [Dependencies](#dependencies)
+3. [Code Architecture](#code-architecture)
+4. [Theory and Implementations](#theory-and-implementations)
+5. [Results and Discussion](#results-and-discussion)
+6. [Future Directions](#future-directions)
 
-The optimization problem is addressed using:
-- **Steepest Descent Method**
-- **Newton's Method**
+## Overview
 
-The performance of these numerical techniques is benchmarked against the **analytical optimal solution**, which strategically assigns the entire good to the highest bidder.
+This repository presents a collection of optimization-driven implementations for classical game theoretic problems. The project focuses on three key problems:
 
----
+- **Auction Design:** Optimizing revenue in auctions by allocating a divisible good among multiple bidders while enforcing individual rationality and allocation constraints.
 
-### Problem Formulation
-We consider an auction setting where an auctioneer allocates a **divisible** good to $n$ bidders, each possessing a private valuation $v_i$. The auctioneer determines the allocation $x_i$ (representing the fraction of the good assigned to bidder $i$) and the corresponding payment $p_i$ imposed on each participant.
+- **Congestion on Networks:** Modeling route-choice behavior among drivers with congestion-dependent latency functions to determine an equilibrium distribution.
 
-#### **Objective Function**
-The objective is to maximize total revenue:
-$$
-R = \sum_{i=1}^{n} p_i
-$$
+- **Stable Matching:** Formulating a continuous relaxation of the assignment problem to compute near-optimal matchings between two sets (e.g., men and women) while enforcing one-to-one pairing constraints.
 
-Given that conventional optimization routines are designed for **minimization**, we recast the problem as minimizing the negative revenue:
-$$
-\Phi(z) = -\sum_{i=1}^n p_i + \frac{\mu}{2} \text{(Penalty Terms)}
-$$
-where $μ$ is a penalty parameter that enforces feasibility constraints within the optimization framework.
+Each problem is formulated as a continuous optimization task where objective functions are minimized using numerical techniques—primarily the Steepest Descent and Newton's Methods. Analytical solutions or benchmarks (such as the Hungarian algorithm for stable matching) are used to validate the numerical results. This project is intended for researchers and practitioners interested in the interplay between optimization theory and game theory.
 
-#### **Constraints**
-The auction must adhere to fundamental economic principles, leading to the following constraints:
+## Dependencies
 
-1. **Individual Rationality (IR):** Each bidder must derive non-negative utility:
-$$
-p_i \leq v_i x_i
-$$
-2. **Allocation Constraints:**
-   - Each allocation fraction must be within the interval $[0,1]$.
-   - The total allocation cannot exceed the available supply:
-     $$
-     \sum_{i=1}^{n} x_i \leq 1
-     $$
-3. **Nonnegative Payments:**
-$$
-p_i \geq 0
-$$
+### Core Requirements
+| Package | Version |
+|---------|---------|
+| Python  | ≥3.8    |
+| NumPy   | ≥1.21.0 |
+| SciPy   | ≥1.7.0  |
+| pandas  | ≥3.10.0 |
+| Matplotlib | ≥2.2.3 |
 
----
+To fulfill all the requirements, after installing Python 3.8, install the packages with:
 
-### Analytical Optimal Solution
-The optimal allocation strategy follows from classical auction theory: the entire good should be allocated to the highest bidder.
-
-- **Let** $i^* = \argmax (v_i)$.
-- Assign $x_{i^*} = 1$, $p_{i^*} = v_{i^*}$
-- Set $x_i = 0$, $p_i = 0$ for all $i \neq i^*$
-
-This results in an optimal revenue of: $R^* = \max(v_i)$
-
----
-
-### Computational Implementation
-#### **Dependencies**
-Ensure that Python 3 and NumPy are installed:
-```sh
-pip install numpy
+```bash
+pip3 install numpy scipy pandas matplotlib
 ```
 
-#### **Usage Instructions**
-Execute the script from the command line:
+## Code Architecture
+
+```sh
+optimization-game-theory/
+├── auction_game.py        # Auction design implementation
+├── congestion_game.py     # Congestion on networks implementation
+├── main.py                # The driver code for the results
+├── matching_game.py       # Stable matching implementation
+├── optimization.py        # Shared optimization routines
+├── README.md              # Project documentation
+└── visualization.py       # Visualization tools of the project
+```
+
+The `main.py` script serves as the central driver for the project, coordinating the execution of different game-theoretic experiments based on command-line arguments. It directs the flow of execution by calling the appropriate optimization routines from `optimization.py` and subsequently invokes `visualization.py` to generate convergence plots and other relevant visual outputs. This modular design ensures a reproducible workflow and facilitates a clear demonstration of the algorithmic performance across various problem settings.
+
+## Theory and Implementations
+
+### Problem I: Auction Design
+
+#### Problem Formulation
+
+We consider an auction setting where an auctioneer allocates a **divisible** good to *n* bidders, each possessing a private valuation $v_i$. The auctioneer determines the allocation $x_i$ (the fraction of the good assigned to bidder $i$) and the corresponding payment $p_i$. The objective is to maximize total revenue  
+```math
+R = \sum_{i=1}^{n} p_i
+```
+Since conventional optimization routines are designed for minimization, the problem is reformulated by minimizing the negative revenue with added penalty terms to enforce feasibility constraints:  
+```math
+\Phi(z) = -\sum_{i=1}^{n} p_i + \frac{\mu}{2} \text{ (Penalty Terms)}
+```
+where $\mu$ is a penalty parameter enforcing the constraints.
+
+The design also imposes key constraints:
+
+- **Individual Rationality:** $p_i \leq v_i \, x_i$ for each bidder.  
+
+- **Allocation Constraints:** Each allocation $x_i$ must be in $[0,1]$ and the total allocation must satisfy $\sum_{i=1}^{n} x_i \leq 1$.
+
+- **Nonnegative Payments:** $p_i \geq 0$.  
+The analytical optimal solution is obtained by allocating the entire good to the bidder with the highest valuation, i.e., if $i^\ast = \arg\max(v_i)$ then set $x_{i^\ast} = 1$ and $p_{i^\ast} = v_{i^\ast}$ (with all other $x_i$ and $p_i$ set to zero), yielding $R^\ast = \max(v_i)$.
+
+Numerical optimization is performed using both the Steepest Descent and Newton’s Methods. These routines iteratively minimize the potential function, with parameters such as the step size (`alpha`), convergence tolerance (`tol`), and maximum iterations adjusted to ensure reliable convergence. The numerical solution is then compared against the analytical optimal allocation to evaluate performance.
+
+#### Implementation Usage
+
+Execute the script from the command line. For example, to run the auction design for three bidders with valuations 10, 20, and 15, use:  
+
 ```sh
 python auction_game.py --valuations "10,20,15"
-```
-This command runs the optimization for three bidders with valuations `{10, 20, 15}`.
+```  
 
-#### **Command-line Arguments**
-- `--valuations`: Comma-separated list of bidder valuations (e.g., `10,20,15`)
-- `--mu`: Penalty coefficient (default: `100.0`)
-- `--alpha`: Step size for steepest descent (default: `0.01`)
-- `--tol`: Convergence criterion (default: `1e-6`)
-- `--max_iter`: Maximum iterations for steepest descent (default: `1000`)
-- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`)
+Command-line arguments include: 
 
-Example with custom parameters:
+- `--valuations`: Comma-separated list of bidder valuations (e.g., `"10,20,15"`).  
+- `--mu`: Penalty coefficient (default: `10.0`).  
+- `--alpha`: Step size for steepest descent (default: `0.001`).  
+- `--tol`: Convergence criterion (default: `1e-6`).  
+- `--max_iter`: Maximum iterations for steepest descent (default: `1000`).  
+- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`).  
+
+For example, to use custom parameters, run:  
+
 ```sh
 python auction_game.py --valuations "15,25,30" --mu 200 --alpha 0.005 --tol 1e-8
+```  
+
+---
+
+### Problem II: Congestion on Networks
+
+#### Problem Formulation
+
+We consider a congestion game on a network with two routes. Route 1 has a latency function given by  
+```math
+L_1(x) = a_1 x + b_1,
+```
+and Route 2 has  
+```math
+L_2(x) = a_2 x + b_2.
+```
+There are $N$ drivers who must be allocated between these routes. The equilibrium is determined by minimizing the potential function:  
+```math
+\Phi(x) = \frac{1}{2} a_1 x^2 + b_1 x + \frac{1}{2} a_2 (N - x)^2 + b_2 (N - x),
+```
+where $x$ represents the number of drivers on Route 1 (and $N - x$ on Route 2). The analytical equilibrium is obtained by setting the derivative to zero, leading to  
+```math
+(a_1 + a_2)x = a_2 N + b_2 - b_1,
+```
+and therefore,  
+```math
+x^\ast = \frac{a_2 N + b_2 - b_1}{a_1 + a_2}.
 ```
 
-#### **Expected Output**
-- **Steepest Descent Solution**: Computed allocation `x` and payments `p`
-- **Newton’s Method Solution**: Alternative computed solution, if convergence is achieved
-- **Analytical Optimal Solution**: Benchmark revenue and allocations
-- **Performance Analysis**: Deviation of numerical solutions from the theoretical optimum
+The potential function is minimized using numerical optimization techniques—specifically, the Steepest Descent and Newton’s Methods—to determine the optimal distribution of drivers. As with the auction design, penalty functions and convergence parameters (`alpha`, `tol`, `max_iter`, etc.) are tuned to ensure that the algorithm converges to the analytical equilibrium. The computed equilibrium distribution is then compared with the expected analytical result.
 
----
+#### Implementation Usage
 
-### Code Architecture
-```sh
-├── auction_game.py           # Main execution script
-├── optimization.py           # Implementation of numerical optimization methods
-└── README.md                 # Documentation
-```
+Run the congestion game script from the terminal. For example, to simulate 100 drivers with specified latency parameters, execute:
 
----
-
-### Results & Discussion
-- **Penalty Function Approach:** The quadratic penalty formulation ensures soft constraint enforcement while maintaining numerical stability.
-- **Steepest Descent vs. Newton’s Method:**
-  - The steepest descent method demonstrates robustness but requires careful step size tuning for convergence.
-  - Newton’s method converges more rapidly when the Hessian is well-conditioned, but may suffer from numerical instability in ill-conditioned cases.
-- **Comparison with Analytical Solution:** The numerical methods approximate the optimal allocation but may exhibit small deviations due to penalty parameter selection and numerical precision.
-
----
-
-### Future Directions
-- **Adaptive Penalty Methods:** Implementing dynamic adjustment schemes for $μ$ to enhance constraint adherence.
-- **Alternative Optimization Techniques:** Employing constrained solvers such as `scipy.optimize.minimize` to directly handle feasibility constraints.
-- **Graphical Convergence Analysis:** Visualizing algorithmic convergence behavior across different initial conditions and parameter settings.
-
----
----
-
-## Congestion Game on Networks
-
-### Overview
-This part of the project implements an optimization-based approach to solve the **Congestion Game on a Network**, where drivers choose between two routes, and congestion impacts their travel times. The objective is to find the equilibrium distribution of drivers across the two routes using numerical optimization techniques.
-
-We use:
-- **Steepest Descent Method**
-- **Newton's Method**
-
-We compare these numerical solutions to the **analytical equilibrium solution** obtained from setting the potential function's derivative to zero.
-
----
-
-### Problem Formulation
-#### **Network Setup**
-- We consider two routes with congestion-dependent latencies:
-  - **Route 1:** Latency function: $L_1(x) = a_1 x + b_1$
-  - **Route 2:** Latency function: $L_2(x) = a_2 x + b_2$
-- There are $N$ drivers who must be allocated between these two routes.
-
-#### **Potential Function**
-The equilibrium can be found by minimizing the **potential function**:
-$$
-\Phi(x) = \frac{1}{2} a_1 x^2 + b_1 x + \frac{1}{2} a_2 (N - x)^2 + b_2 (N - x)
-$$
-where $x$ is the number of drivers on route 1, and $N-x$ is the number on route 2.
-
-#### **Analytical Optimal Solution**
-Setting the derivative of the potential function to zero:
-$$
-(a_1 + a_2)x = a_2 N + b_2 - b_1
-$$
-Solving for $x$, we obtain the expected equilibrium:
-$$
-x^* = \frac{a_2 N + b_2 - b_1}{a_1 + a_2}
-$$
-
----
-
-### Computational Implementation
-#### **Dependencies**
-Ensure Python 3 and NumPy are installed:
-```sh
-pip install numpy
-```
-
-#### **Usage**
-Run the script from the terminal:
 ```sh
 python congestion_game.py --N 100 --a1 1.0 --b1 0.0 --a2 2.0 --b2 10.0
+``` 
+
+Command-line arguments include:
+
+- `--N`: Number of drivers (default: `100`).  
+- `--a1`, `--b1`: Parameters for Route 1's latency function.  
+- `--a2`, `--b2`: Parameters for Route 2's latency function.  
+- `--alpha`: Step size for steepest descent (default: `0.01`).  
+- `--tol`: Convergence tolerance (default: `1e-8`).  
+- `--max_iter`: Maximum iterations for steepest descent (default: `1000`).  
+- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`).
+
+---
+
+### Problem III: Stable Matching
+
+#### Problem Formulation
+
+We consider a matching market with **n men** and **n women**. A cost matrix $C$ of size $n \times n$ is provided, where $C[i,j]$ represents the cost (or dissatisfaction) of matching man $i$ with woman $j$. The goal is to minimize the total matching cost subject to assignment constraints (each man is matched to exactly one woman, and vice versa) and feasibility bounds (each element $X[i,j]$ of the assignment matrix must lie within $[0, 1]$). The continuous formulation defines the potential function as:  
+```math
+\Phi(x) = \langle C, X \rangle + \frac{\lambda}{2} \|x\|^2 + \frac{\mu}{2}\Biggl[ \sum_{i=1}^{n} \Bigl(\sum_{j=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{j=1}^{n} \Bigl(\sum_{i=1}^{n} X_{ij} - 1\Bigr)^2 + \sum_{i,j}\Bigl(\max(0, -X_{ij})^2 + \max(0, X_{ij}-1)^2\Bigr) \Biggr],
 ```
+where $\langle C, X \rangle$ denotes the total matching cost, $\lambda$ is a regularization parameter ensuring strict convexity, and $\mu$ is a penalty parameter enforcing the matching constraints. The analytical optimal solution is obtained via the Hungarian algorithm, which computes a binary assignment matrix $X^\ast$ that minimizes $\langle C, X^\ast \rangle$ under the one-to-one matching constraints.
 
-#### **Command-line Arguments**
-- `--N`: Number of drivers (default: `100`)
-- `--a1`, `--b1`: Parameters for route 1's latency function
-- `--a2`, `--b2`: Parameters for route 2's latency function
-- `--alpha`: Step size for steepest descent (default: `0.01`)
-- `--tol`: Convergence tolerance (default: `1e-8`)
-- `--max_iter`: Maximum iterations for steepest descent (default: `1000`)
-- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`)
+The potential function for the stable matching problem is minimized using numerical optimization techniques—Steepest Descent and Newton’s Methods. The implementation integrates penalty terms to enforce the assignment and bound constraints, and uses a regularization parameter $\lambda$ for convexity. The continuous solution is then compared against the optimal binary matching computed using the Hungarian algorithm (via `scipy.optimize.linear_sum_assignment`).
 
----
+#### Implementation Usage
 
-### Code Architecture
-```sh
-├── congestion_game.py      # Main script (runs optimization)
-├── optimization.py         # Contains steepest descent & Newton’s method
-└── README.md               # Documentation
-```
-
----
-
-### Results & Discussion
-- **Steepest Descent vs Newton’s Method:**
-  - Steepest descent converges steadily but may require more iterations.
-  - Newton’s method, if the Hessian is well-conditioned, converges much faster.
-- **Comparison to Analytical Solution:**
-  - The best solution aligns with the analytical equilibrium.
-  - The error between computed and theoretical equilibrium is minimal.
-
----
-
-### Future Directions
-- **Adaptive Step Sizes:** Improve steepest descent convergence.
-- **Graphical Analysis:** Visualize convergence and solution distributions.
-- **Multi-route Generalization:** Extend the model to more than two routes.
-
----
----
-
-## Stable Matching Game
-
-### Overview
-This part of the project applies continuous optimization techniques to solve the **Stable Matching Game**. We formulate a continuous relaxation of the classic assignment (or stable matching) problem by defining a potential function that integrates the matching cost with penalty terms enforcing one-to-one matching constraints and feasibility bounds. Two optimization methods—**Steepest Descent** and **Newton's Method**—are employed to minimize the potential function. The obtained solutions are then compared with the analytical optimal matching computed via the Hungarian algorithm.
-
----
-
-### Problem Formulation
-We consider a matching market consisting of **n men** and **n women**. A cost matrix $C$ of size $n \times n$ is provided, where $C[i,j]$ represents the cost (or dissatisfaction) of matching man $i$ with woman $j$. Our goal is to determine a matching that minimizes the total cost subject to the following conditions:
-
-- **Assignment Constraints:** Each man must be matched to exactly one woman, and each woman to exactly one man.
-- **Feasibility Bounds:** Each entry of the assignment matrix $X$ (with $X[i,j]$ indicating the degree of matching) must lie in the interval $[0, 1]$.
-
-To solve this, we define a potential function $\Phi(x)$ over a flattened vector $x$ (which corresponds to the matrix $X$) as follows:
-
-$$
-\Phi(x) = \langle C, X \rangle + \frac{\lambda}{2} \|x\|^2 + \frac{\mu}{2}\Bigg[ \sum_{i=1}^{n} \Big(\sum_{j=1}^{n} X_{ij} - 1\Big)^2 + \sum_{j=1}^{n} \Big(\sum_{i=1}^{n} X_{ij} - 1\Big)^2 + \sum_{i,j}\Big(\max(0, -X_{ij})^2 + \max(0, X_{ij}-1)^2\Big) \Bigg]
-$$
-
-Here, $\langle C, X \rangle$ denotes the total matching cost, $\lambda$ is a regularization parameter ensuring strict convexity, and $\mu$ is a penalty parameter enforcing the assignment and bounds constraints.
-
----
-
-### Analytical Optimal Solution
-The classical assignment problem can be solved optimally using the Hungarian algorithm. This method computes the binary assignment matrix $X^*$ that minimizes the total cost $\langle C, X^* \rangle$ while satisfying the one-to-one matching constraints. This optimal solution serves as a benchmark for our continuous optimization approach.
-
----
-
-### Computational Implementation
-The implementation comprises:
-- **Continuous Optimization:** The potential function is minimized using two numerical methods:
-  - **Steepest Descent:** Iteratively updates the solution in the direction of the negative gradient.
-  - **Newton's Method:** Utilizes second-order (Hessian) information to achieve faster convergence when feasible.
-- **Penalty Method:** Constraint violations (row sums, column sums, and variable bounds) are penalized quadratically.
-- **Optimal Matching:** The Hungarian algorithm (via `scipy.optimize.linear_sum_assignment`) is used to compute the analytical optimal solution.
-
-The code accepts input parameters such as the number of agents $n$, an optional CSV file for the cost matrix, penalty and regularization parameters, and optimization parameters (step size, tolerance, and maximum iterations).
-
-#### Dependencies
-
-To run the stable matching game optimization, you need Python 3 and the following dependencies:
-
-- **NumPy** (`pip install numpy`) – for numerical computations
-- **SciPy** (`pip install scipy`) – for optimization routines (Hungarian algorithm)
-- **argparse** (included in Python standard library) – for command-line argument parsing
-
-Ensure you have these installed before running the script.
-
----
-
-#### Usage
-
-Run the script from the command line using:
-
-```sh
-python matching_game.py --n <num_agents> --cost_file <path_to_csv> [options]
-```
-
-##### Example 1: Run with a randomly generated cost matrix (default size 5x5)
+Run the stable matching script from the command line. For instance, to run with a randomly generated $5\times5$ cost matrix, simply execute:
 
 ```sh
 python matching_game.py
 ```
 
-##### Example 2: Run with a custom cost matrix from a CSV file
-
-If you want to use a custom cost matrix, you can run the following command:
+To run with a custom cost matrix from a CSV file (where each row represents a man and each column a woman), use:
 
 ```sh
 python matching_game.py --n 4 --cost_file cost_matrix.csv
 ```
 
-An example `cost_matrix.csv` ($4\times4$ matrix) is as follows:
+An example `cost_matrix.csv` might contain:
 
 ```csv
 3.2, 1.5, 4.8, 2.0
@@ -293,50 +189,49 @@ An example `cost_matrix.csv` ($4\times4$ matrix) is as follows:
 4.5, 2.3, 3.7, 1.8
 1.0, 4.2, 2.5, 3.3
 ```
-Note that Each row corresponds to a man, each column corresponds to a woman, and each cell $(i, j)$ contains the cost of matching man $i$ with woman $j$. The file has exactly $n$ rows and $n$ columns (where $n$ matches the `--n` argument). Values are separated by commas (,). No extra spaces or blank lines are present in the file.
 
-##### Example 3: Adjust penalty and optimization parameters
+Additional command-line arguments include:
+
+- `--n`: Number of men/women (matrix size, default: `5`).  
+- `--cost_file`: Path to a CSV file containing the cost matrix.  
+- `--mu`: Penalty parameter enforcing assignment constraints (default: `1000.0`).  
+- `--lam`: Regularization parameter ensuring strict convexity (default: `0.01`).  
+- `--alpha`: Step size for steepest descent (default: `0.001`).  
+- `--tol`: Convergence tolerance (default: `1e-6`).  
+- `--max_iter`: Maximum iterations for steepest descent (default: `2000`).  
+- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`).  
+- `--seed`: Random seed for reproducibility (default: `42`).
+
+For example, to adjust parameters, run:
 
 ```sh
 python matching_game.py --n 6 --mu 2000 --lam 0.2 --alpha 0.0005 --max_iter 5000
 ```
 
-#### Command-Line Arguments
+## Results and Discussion
 
-- `--n`: Number of men/women in the matching problem (i.e., matrix size $n \times n$). (default: `5`)
-- `--cost_file`: Path to a CSV file containing the cost matrix. If not provided, a random matrix is generated.
-- `--mu`: Penalty parameter enforcing assignment constraints. (default: `1000.0`)
-- `--lam`: Regularization parameter ensuring strict convexity. (default: `0.01`)
-- `--alpha`: Step size for the steepest descent method. (default: `0.001`)
-- `--tol`: Convergence tolerance for stopping the optimization. (default: `1e-6`)
-- `--max_iter`: Maximum iterations for steepest descent (default: `2000`)
-- `--max_iter_newton`: Maximum iterations for Newton’s method (default: `100`)
-- `--seed`: Random seed for reproducibility when generating cost matrices. (default: `42`)
+Our experimental analysis highlights the varying effectiveness of optimization methods across different problem domains.
 
----
+In the auction design problem, the steepest descent method produces a solution but exhibits extreme numerical instability, often yielding values far from the analytical optimum. This suggests that improper parameter selection—such as an overly large step size or high penalty term—leads to divergence. Careful tuning of parameters, including a smaller step size ($\alpha$) and moderate penalty coefficient ($\mu$), is necessary to stabilize convergence. Newton’s method, on the other hand, fails entirely due to an ill-conditioned Hessian, making matrix inversion impossible. This is expected, as the penalty terms introduce nontrivial nonlinearity. To address this, a small regularization term ($\epsilon I$) can be added to the Hessian before inversion, improving numerical stability and allowing Newton’s method to converge when feasible.
 
-### Code Architecture
-```sh
-├── matching_game.py      # Main script (runs the optimization for the stable matching game)
-├── optimization.py       # Contains implementations of steepest descent & Newton's method
-└── README.md             # This documentation
-```
+For congestion optimization, the potential function follows a well-structured quadratic form. This allows Newton’s method to leverage second-order curvature information for rapid convergence, making it the preferred approach when computational efficiency is a priority. However, when the Hessian is poorly conditioned or computational constraints limit matrix inversion, steepest descent remains a robust alternative. While it requires more iterations, it consistently finds solutions, making it preferable in cases where stability is more important than speed. The trade-off between the two methods largely depends on resource availability and the scale of the network.
 
----
+The stable matching problem introduces additional challenges due to its near-linear potential function, which diminishes the advantages of Newton’s method. Without strong curvature information, Newton’s updates become unstable, leading to non-convergence. Steepest descent, while sensitive to step size selection, remains the more reliable approach. However, the continuous relaxation used in this optimization framework may introduce significant approximation errors compared to the discrete optimal solution. To improve Newton’s method’s performance in this setting, incorporating a smoothed potential function or adaptive Hessian regularization may help mitigate instability and enable better convergence.
 
-### Results & Discussion
+Overall, our findings underscore the importance of parameter tuning and method selection in each optimization problem. The choice between steepest descent and Newton’s method depends not only on the structure of the objective function but also on numerical stability considerations and computational feasibility.
 
-- **Numerical Methods:** Both steepest descent and Newton's method yield continuous assignment matrices that approximate the optimal matching. In practice, these continuous solutions are close to binary values due to the heavy penalty on constraint violations.
-- **Comparison:** The linear cost term computed from the numerical solutions is compared with the optimal cost from the Hungarian algorithm. Typically, the potential function minimizers achieve a linear cost near the optimal cost, validating the continuous formulation.
-- **Trade-offs:** Steepest descent is robust but may require a carefully tuned step size, while Newton's method can converge faster provided that the Hessian is well-conditioned.
+## Future Directions
 
----
+Advancing the current framework can be approached along several complementary axes:
 
-### Future Directions
+- **Parameter Tuning:**
+Future work will explore adaptive strategies for dynamically adjusting penalty parameters ($\mu$) and regularization terms ($\lambda$). Such adaptive schemes could automatically balance the trade-off between constraint enforcement and objective minimization, thereby enhancing convergence rates and solution accuracy.
 
-- **Parameter Tuning:** Investigate adaptive strategies for adjusting the penalty $\mu$ and regularization $\lambda$ parameters.
-- **Algorithm Enhancements:** Explore advanced optimization algorithms (e.g., quasi-Newton methods or constrained optimization solvers) to improve convergence.
-- **Extension to Larger Markets:** Generalize the approach to handle larger matching markets and many-to-many matchings.
-Post-processing: Develop effective rounding techniques to convert continuous solutions into feasible binary matchings.
+- **Algorithmic Enhancements:**
+The incorporation of advanced optimization techniques is a promising avenue. Implementing quasi-Newton methods (e.g., BFGS and L-BFGS) and integrating trust-region frameworks could provide improved convergence behavior, particularly in problems where the Hessian information is unreliable. Additionally, exploring variants of stochastic gradient descent may prove beneficial in handling large-scale or noisy optimization scenarios.
 
----
+- **Model Extensions:**
+Extending the current models to more complex real-world applications is an important direction. Potential extensions include multi-item auctions with combinatorial bids, network games that involve multiple origin-destination pairs, and many-to-many matching markets. Moreover, developing robust post-processing methods to round continuous solutions into feasible binary assignments will enhance the practical applicability of the matching framework.
+
+- **Computational Enhancements:**
+To address scalability issues, future efforts could focus on parallel implementations and GPU acceleration (e.g., using CuPy) to manage large-scale problems more efficiently. Such computational improvements would allow the framework to be applied to higher-dimensional and more computationally intensive problems without compromising performance.
