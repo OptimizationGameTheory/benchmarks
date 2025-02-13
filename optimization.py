@@ -52,8 +52,18 @@ def visualize_game(x, iteration, method, N, game_type, final=False, valuations=N
         plt.savefig(f"visualizations/{game_type}_{method}_iteration_{iteration}.png")
 
 
+def backtracking_line_search(f, x, grad, alpha=0.001, rho=0.5, c=1e-4, max_iter=10):
+    for _ in range(max_iter):
+        if f(x - alpha * grad) < f(x) - c * alpha * np.dot(grad, grad):
+            alpha *= rho
+        else:
+            break
+    return alpha
+
+
 def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False,
                      N=None, valuations=None, game_type=None):
+    should_backtrack = (alpha < 0)
     x = np.copy(x0)
     history = []
     converged = False
@@ -65,6 +75,10 @@ def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1
             print(f"Converged in {i} iterations")
             return x
         grad = grad_function(f, x)
+        if should_backtrack:
+            alpha = backtracking_line_search(f, x, grad)
+        if i == 70:
+            pass
         x_new = x - alpha * grad
         if np.linalg.norm(x_new - x) < convergence_tol:
             converged = True

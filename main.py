@@ -38,11 +38,11 @@ def add_parser_args(parser):
     matching_parser.add_argument('--n', type=int, default=5, help='Number of men/women (default: 5)')
     matching_parser.add_argument('--cost_file', type=str, default=None,
                                  help='Path to CSV file containing the cost matrix (optional)')
-    matching_parser.add_argument('--mu', type=float, default=1000.0, help='Penalty parameter mu (default: 1000.0)')
-    matching_parser.add_argument('--lam', type=float, default=0.1,
+    matching_parser.add_argument('--mu', type=float, default=100.0, help='Penalty parameter mu (default: 10000.0)')
+    matching_parser.add_argument('--lam', type=float, default=0.001,
                                  help='Regularization parameter lambda (default: 0.1)')
-    matching_parser.add_argument('--alpha', type=float, default=0.001,
-                                 help='Step size for steepest descent (default: 0.001)')
+    matching_parser.add_argument('--alpha', type=float, default=0.0001,
+                                 help='Step size for steepest descent (default: 0.0001), -1 for backtrack')
     matching_parser.add_argument('--tol', type=float, default=1e-6, help='Convergence tolerance (default: 1e-6)')
     matching_parser.add_argument('--max_iter', type=int, default=2000,
                                  help='Maximum iterations for steepest descent (default: 2000)')
