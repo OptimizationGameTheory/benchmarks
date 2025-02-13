@@ -62,7 +62,7 @@ def backtracking_line_search(f, x, grad, alpha=0.001, rho=0.5, c=1e-4, max_iter=
 
 
 def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False,
-                     N=None, valuations=None, game_type=None):
+                     N=None, valuations=None, game_type=None, projection=None):
     should_backtrack = (alpha < 0)
     x = np.copy(x0)
     history = []
@@ -75,11 +75,17 @@ def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1
             print(f"Converged in {i} iterations")
             return x
         grad = grad_function(f, x)
+        
         if should_backtrack:
             alpha = backtracking_line_search(f, x, grad)
         if i == 70:
             pass
+        
         x_new = x - alpha * grad
+        
+        if projection is not None:
+            x_new = projection(x_new)
+        
         if np.linalg.norm(x_new - x) < convergence_tol:
             converged = True
         x = x_new
@@ -91,7 +97,7 @@ def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1
 
 
 def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=False,
-           valuations=None, N=None, game_type=None):
+           valuations=None, N=None, game_type=None, regularization=0.0, projection=None):
     x = np.copy(x0)
     history = []
     converged = False
@@ -104,13 +110,17 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
             return x
 
         grad = grad_function(f, x)
-        hess = hessian_function(f, x)
+        hess = hessian_function(f, x) + regularization * np.eye(len(x))
         try:
             hess_inv = np.linalg.inv(hess)
         except np.linalg.LinAlgError:
             raise ValueError("Hessian is not invertible. No solution found.")
 
         x_new = x - np.dot(hess_inv, grad)
+        
+        if projection is not None:
+            x_new = projection(x_new) 
+        
         if np.linalg.norm(x_new - x) < convergence_tol:
             converged = True
         x = x_new
@@ -119,4 +129,3 @@ def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_
     if visualize and N is not None:
         visualize_game(x, max_iter, "Newton Method", N=N, valuations=valuations, game_type=game_type, final=True)
     return x
-

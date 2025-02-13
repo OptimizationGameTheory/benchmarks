@@ -1,26 +1,22 @@
 import numpy as np
 from optimization import steepest_descent, newton
 
-
-def potential(z, valuations, mu=100.0):
+def potential_allocation(x, valuations, mu=100.0):
     """
-    Potential function for the optimal auction design.
+    Potential function for the optimal auction design (allocations only).
     
     Parameters:
-      z  : 1D numpy array of length 2*n, where the first n entries are allocations x and
-           the next n entries are payments p.
+      x  : 1D numpy array of length n for allocations.
       valuations  : 1D numpy array of bidder valuations.
       mu : Penalty parameter.
-    
+
     Returns:
       Scalar value of the potential function.
     """
     n = len(valuations)
-    x = z[:n]
-    p = z[n:]
 
-    # Term to maximize revenue: we minimize (-sum(p))
-    revenue_term = -np.sum(p)
+    # Revenue term: Maximize sum(v_i * x_i) by minimizing -sum(v_i * x_i)
+    revenue_term = -np.sum(valuations * x)
 
     # Penalty for allocation bounds: x_i must be between 0 and 1.
     penalty_alloc_bounds = np.sum(np.maximum(0, -x) ** 2) + np.sum(np.maximum(0, x - 1) ** 2)
@@ -28,36 +24,31 @@ def potential(z, valuations, mu=100.0):
     # Penalty for total allocation: sum(x) must be <= 1.
     penalty_total_alloc = np.maximum(0, np.sum(x) - 1) ** 2
 
-    # Penalty for payment non-negativity: p_i must be >= 0.
-    penalty_payment_nonneg = np.sum(np.maximum(0, -p) ** 2)
-
-    # Penalty for individual rationality: p_i must be <= v_i * x_i.
-    penalty_ir = np.sum(np.maximum(0, p - valuations * x) ** 2)
-
-    penalty = penalty_alloc_bounds + penalty_total_alloc + penalty_payment_nonneg + penalty_ir
+    penalty = penalty_alloc_bounds + penalty_total_alloc
     return revenue_term + (mu / 2.0) * penalty
-
 
 def analytical_optimal_solution(v):
     """
-    Computes the analytical optimal solution for the auction problem.
-    
+    Computes the analytical optimal allocation for the auction problem.
+
     Given valuations v, the optimum is to award the entire good to the bidder with the highest v.
     
     Returns:
-      A numpy array z_opt = [x_opt, p_opt] of length 2*n.
+      A numpy array x_opt of length n.
     """
     n = len(v)
     x_opt = np.zeros(n)
-    p_opt = np.zeros(n)
     i_star = np.argmax(v)
     x_opt[i_star] = 1.0
-    p_opt[i_star] = v[i_star]
-    return np.concatenate([x_opt, p_opt])
+    return x_opt
 
+def auction_projection(x):
+    x = np.clip(x, 0, 1)  # enforce bounds [0, 1]
+    if np.sum(x) > 1:
+        x /= np.sum(x)  # normalize to ensure sum <= 1
+    return x
 
 def main(args):
-    # Parse bidder valuations from the input string.
     try:
         v_list = [float(val.strip()) for val in args.valuations.split(',')]
     except Exception as e:
@@ -65,21 +56,19 @@ def main(args):
     valuations = np.array(v_list)
     n = len(valuations)
 
-    # Define the potential function as a lambda that depends only on z.
-    potential_func = lambda z: potential(z, valuations, mu=args.mu)
+    # Define the potential function as a lambda that depends only on x.
+    potential_func = lambda x: potential_allocation(x, valuations, mu=args.mu)
 
-    # Initial guess: a feasible point (e.g., equal allocation and zero payments)
+    # Initial guess: equal allocation
     x0 = np.ones(n) / n
-    p0 = np.zeros(n)
-    z0 = np.concatenate([x0, p0])
 
-    print("=== Optimal Auction Design Optimization ===")
+    print("=== Optimal Auction Design Optimization (Allocations Only) ===")
     print("Bidder valuations:", valuations)
-    print("Initial guess (allocations, payments):", z0)
+    print("Initial guess (allocations):", x0)
 
     # Solve using Steepest Descent
     print("\n--- Running Steepest Descent ---")
-    z_sd = steepest_descent(potential_func, z0,
+    x_sd = steepest_descent(potential_func, x0,
                             alpha=args.alpha,
                             convergence_tol=args.tol,
                             max_iter=args.max_iter,
@@ -87,38 +76,56 @@ def main(args):
                             N=n,
                             valuations=valuations,
                             game_type='auction')
-    print("Steepest Descent Solution (x and p):", z_sd)
-    print("Potential function value (Steepest Descent):", potential_func(z_sd))
-    revenue_sd = np.sum(z_sd[n:])
+    print("Steepest Descent Solution (x):", x_sd)
+    print("Potential function value (Steepest Descent):", potential_func(x_sd))
+    payments_sd = x_sd * valuations
+    revenue_sd = np.sum(payments_sd)
     print("Achieved Revenue (Steepest Descent):", revenue_sd)
+    print("Payments (Steepest Descent):", payments_sd)
 
     # Solve using Newton's Method
     print("\n--- Running Newton's Method ---")
     try:
-        z_newton = newton(potential_func, z0, convergence_tol=args.tol, max_iter=args.max_iter_newton, visualize=True,
-                          N=n, valuations=valuations, game_type='auction')
-        print("Newton's Method Solution (x and p):", z_newton)
-        print("Potential function value (Newton):", potential_func(z_newton))
-        revenue_newton = np.sum(z_newton[n:])
+        x_newton = newton(potential_func, x0, convergence_tol=args.tol, max_iter=args.max_iter_newton,
+                  visualize=True, N=n, valuations=valuations, game_type='auction',
+                  regularization=1e-5, projection=auction_projection)
+        print("Newton's Method Solution (x):", x_newton)
+        print("Potential function value (Newton):", potential_func(x_newton))
+        payments_newton = x_newton * valuations
+        revenue_newton = np.sum(payments_newton)
         print("Achieved Revenue (Newton):", revenue_newton)
+        print("Payments (Newton):", payments_newton)
     except Exception as e:
         print("Newton's method failed with error:", e)
-        z_newton = None
+        x_newton = None
 
     # Compute the analytical (optimal) solution.
-    z_opt = analytical_optimal_solution(valuations)
-    optimal_revenue = np.sum(z_opt[n:])
+    x_opt = analytical_optimal_solution(valuations)
+    payments_opt = x_opt * valuations
+    optimal_revenue = np.sum(payments_opt)
     print("\n--- Analytical Optimal Solution ---")
-    print("Analytical Optimal (x and p):", z_opt)
+    print("Analytical Optimal (x):", x_opt)
+    print("Payments (Analytical):", payments_opt)
     print("Optimal Revenue:", optimal_revenue)
 
     # Compare the revenues obtained by the numerical methods to the analytical optimum.
     print("\n--- Comparison ---")
     print("Steepest Descent Revenue Error: {:.6f}".format(abs(optimal_revenue - revenue_sd)))
-    if z_newton is not None:
+    if x_newton is not None:
         print("Newton's Method Revenue Error: {:.6f}".format(abs(optimal_revenue - revenue_newton)))
     else:
         print("Newton's Method did not produce a solution.")
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Optimize auction design using only allocation optimization.")
+    parser.add_argument("--valuations", type=str, required=True, help="Comma-separated list of bidder valuations")
+    parser.add_argument("--mu", type=float, default=100.0, help="Penalty parameter")
+    parser.add_argument("--alpha", type=float, default=0.005, help="Step size for steepest descent")
+    parser.add_argument("--tol", type=float, default=1e-8, help="Convergence tolerance")
+    parser.add_argument("--max_iter", type=int, default=1000, help="Max iterations for steepest descent")
+    parser.add_argument("--max_iter_newton", type=int, default=100, help="Max iterations for Newton's method")
+
+    args = parser.parse_args()
+    main(args)
