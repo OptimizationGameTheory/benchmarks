@@ -3,7 +3,6 @@ import numpy as np
 
 from optimization import steepest_descent, newton
 
-
 def congestion_potential(x, N, a1, b1, a2, b2):
     """
     Computes the potential function for the congestion game.
@@ -20,13 +19,25 @@ def congestion_potential(x, N, a1, b1, a2, b2):
         float: The value of the potential function.
     """
     x_val = x[0]
-    x2 = N - x_val  # drivers on route 2
+    x2 = N - x_val  # Drivers on route 2
     potential_route1 = 0.5 * a1 * x_val ** 2 + b1 * x_val
     potential_route2 = 0.5 * a2 * x2 ** 2 + b2 * x2
     return potential_route1 + potential_route2
 
 def solve_congestion_game(N, a1, b1, a2, b2, alpha, tol, max_iter, max_iter_newton):
-    x0 = np.array([N / 2])
+    """
+    Solves the congestion game using Steepest Descent and Newton's Method.
+    
+    Parameters:
+        N (int): Total number of drivers.
+        a1, b1 (float): Parameters for the latency function of route 1.
+        a2, b2 (float): Parameters for the latency function of route 2.
+        alpha (float): Step size for steepest descent.
+        tol (float): Convergence tolerance for optimization methods.
+        max_iter (int): Maximum iterations for steepest descent.
+        max_iter_newton (int): Maximum iterations for Newton's method.
+    """
+    x0 = np.array([N / 2])  # Initial guess: equal load on both routes
 
     print("\nCongestion Game on a Network")
     print("------------------------------")
@@ -62,7 +73,20 @@ def solve_congestion_game(N, a1, b1, a2, b2, alpha, tol, max_iter, max_iter_newt
     print(f"Load on route 2: {N - expected_x:.6f}")
 
 def main():
+    """
+    Parses command-line arguments and runs the congestion game solver.
+    """
     parser = argparse.ArgumentParser(description="Solve the Congestion Game using Optimization Techniques.")
+    parser.add_argument("--N", type=int, required=True, help="Total number of drivers")
+    parser.add_argument("--a1", type=float, required=True, help="Coefficient for latency function of route 1")
+    parser.add_argument("--b1", type=float, required=True, help="Intercept for latency function of route 1")
+    parser.add_argument("--a2", type=float, required=True, help="Coefficient for latency function of route 2")
+    parser.add_argument("--b2", type=float, required=True, help="Intercept for latency function of route 2")
+    parser.add_argument("--alpha", type=float, required=True, help="Step size for steepest descent")
+    parser.add_argument("--tol", type=float, required=True, help="Convergence tolerance")
+    parser.add_argument("--max_iter", type=int, required=True, help="Maximum iterations for steepest descent")
+    parser.add_argument("--max_iter_newton", type=int, required=True, help="Maximum iterations for Newton's method")
+    
     args = parser.parse_args()
     solve_congestion_game(args.N, args.a1, args.b1, args.a2, args.b2, args.alpha, args.tol, args.max_iter, args.max_iter_newton)
 

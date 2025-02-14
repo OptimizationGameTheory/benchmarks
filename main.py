@@ -1,12 +1,16 @@
 import argparse
 import numpy as np
-
 from auction_game import solve_auction_game
 from congestion_game import solve_congestion_game
 from matching_game import solve_matching_game, load_cost_matrix
 
-
 def add_parser_args(parser):
+    """
+    Adds command-line arguments for each game to the argument parser.
+    
+    Parameters:
+        parser (argparse.ArgumentParser): The argument parser instance.
+    """
     subparsers = parser.add_subparsers(dest="game", help="The game to solve")
     
     # Auction game arguments
@@ -43,6 +47,9 @@ def add_parser_args(parser):
     matching_parser.add_argument('--seed', type=int, default=42, help='Random seed for cost matrix generation (default: 42)')
 
 def main():
+    """
+    Main function to parse arguments and call the appropriate game-solving function.
+    """
     parser = argparse.ArgumentParser(description="Solve various games using optimization techniques.")
     add_parser_args(parser)
     args = parser.parse_args()
