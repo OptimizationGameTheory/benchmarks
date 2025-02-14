@@ -21,7 +21,7 @@ def plot_congestion_distribution(x, iteration, method, N, final=False):
     plt.pause(0.005)
 
 
-def plot_auction_allocation(z, valuations, iteration, method, final=False):
+def plot_auction_allocation(x, valuations, iteration, method, final=False):
     if iteration == 0:
         plt.ion()
         fig, ax1 = plt.subplots()
@@ -33,8 +33,7 @@ def plot_auction_allocation(z, valuations, iteration, method, final=False):
     ax1.clear()
     ax2.clear()
     n = len(valuations)
-    x = z[:n]
-    payments = z[n:]
+    payments = x * valuations
 
     color = 'tab:blue'
     ax1.bar(range(n), x, color=color, alpha=0.6)
