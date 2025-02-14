@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import Normalize
+
 
 def plot_congestion_distribution(x, iteration, method, N, final=False):
     if iteration == 0:
@@ -69,22 +71,25 @@ def plot_matching_assignment(x, n, iteration, method, final=False):
                                                    loc='right', bbox=[1.1, 0.1, 0.2, 0.8])
         plot_matching_assignment.table.auto_set_font_size(False)
         plot_matching_assignment.table.set_fontsize(10)
+        # Set normalization for color bar to cover the full range [0, 1]
+        plot_matching_assignment.norm = Normalize(vmin=0, vmax=1)
     ax = plot_matching_assignment.ax
     ax.clear()
-    cax = ax.matshow(X, cmap='viridis')
+    cax = ax.matshow(X, cmap='viridis', norm=plot_matching_assignment.norm)
     ax.set_title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
     ax.set_xlabel("Women")
     ax.set_ylabel("Men")
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
 
-    # Add color legend with min and max labels
+    # Add color legend with fixed range and labels
     if iteration == 0:
         cbar = plot_matching_assignment.fig.colorbar(cax, ax=ax, orientation='vertical')
         cbar.set_label('Match Quality')
         plot_matching_assignment.cbar = cbar
     cbar = plot_matching_assignment.cbar
-    cbar.set_ticks([x.min(), x.max()])
-    cbar.set_ticklabels([f'{x.min():.2f}', f'{x.max():.2f}'])
+    cbar.set_ticks([0, 0.25, 0.5, 0.75, 1])
+    cbar.set_ticklabels(['0', '0.25', '0.5', '0.75', '1'])
 
-    plt.pause(0.2)
+    if iteration % 30 == 0:
+        plt.pause(0.001)

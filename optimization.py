@@ -52,9 +52,9 @@ def visualize_game(x, iteration, method, N, game_type, final=False, valuations=N
         plt.savefig(f"visualizations/{game_type}_{method}_iteration_{iteration}.png")
 
 
-def backtracking_line_search(f, x, grad, alpha=0.001, rho=0.5, c=1e-4, max_iter=10):
+def backtracking_line_search(f, x, grad, alpha=0.01, rho=0.5, c=1e-4, max_iter=10):
     for _ in range(max_iter):
-        if f(x - alpha * grad) < f(x) - c * alpha * np.dot(grad, grad):
+        if f(x - alpha * grad) > f(x) - c * alpha * np.dot(grad, grad):
             alpha *= rho
         else:
             break

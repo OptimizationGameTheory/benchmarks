@@ -49,6 +49,67 @@ def matching_potential(x, n, C, mu, lam):
     return cost_term + reg_term + (mu / 2.0) * penalty
 
 
+def gradient_matching_potential(x, n, C, mu, lam):
+    X = x.reshape((n, n))
+
+    # Gradient of the linear cost term.
+    grad_cost_term = C.flatten()
+
+    # Gradient of the regularization term.
+    grad_reg_term = lam * x
+
+    # Gradient of the penalty for row sum constraints.
+    row_sums = np.sum(X, axis=1) - 1
+    grad_penalty_rows = np.zeros_like(X)
+    for i in range(n):
+        grad_penalty_rows[i, :] = 2 * row_sums[i]
+
+    # Gradient of the penalty for column sum constraints.
+    col_sums = np.sum(X, axis=0) - 1
+    grad_penalty_cols = np.zeros_like(X)
+    for j in range(n):
+        grad_penalty_cols[:, j] = 2 * col_sums[j]
+
+    # Gradient of the penalty for bounds.
+    grad_penalty_bounds = 2 * np.maximum(0, -X) - 2 * np.maximum(0, X - 1)
+
+    # Total gradient.
+    grad_penalty = grad_penalty_rows + grad_penalty_cols + grad_penalty_bounds
+
+    grad_total = grad_cost_term + grad_reg_term + (mu / 2.0) * grad_penalty.flatten()
+
+    return grad_total
+
+
+def hessian_matching_potential(x, n, C, mu, lam):
+    X = x.reshape((n, n))
+
+    # Initialize the Hessian matrix with regularization term (lam * I)
+    H = lam * np.eye(n * n)
+
+    # Hessian of the penalty for row sum constraints
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                H[i * n + j, i * n + k] += mu * 2
+
+    # Hessian of the penalty for column sum constraints
+    for j in range(n):
+        for i in range(n):
+            for k in range(n):
+                H[i * n + j, k * n + j] += mu * 2
+
+    # Hessian of the penalty for bounds
+    for i in range(n):
+        for j in range(n):
+            if X[i, j] < 0:
+                H[i * n + j, i * n + j] += mu * 2
+            elif X[i, j] > 1:
+                H[i * n + j, i * n + j] += mu * 2
+
+    return H
+
+
 def load_cost_matrix(file_path, n):
     """
     Loads a cost matrix from a CSV file.
@@ -76,6 +137,9 @@ def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_
 
     # Define the potential function as a function of x only.
     potential_func = lambda x: matching_potential(x, n, cost_matrix, mu, lam)
+    gradient_func = lambda f, x: gradient_matching_potential(x, n, cost_matrix, mu, lam)
+    hessian_func = lambda f, x: hessian_matching_potential(x, n, cost_matrix, mu, lam)
+
 
     # Initial guess: uniform assignment (each man assigns 1/n to every woman).
     x0 = np.full((n, n), 1.0 / n).flatten()
@@ -118,7 +182,7 @@ def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_
     # For comparison, compute the linear cost term from the numerical solutions.
     def linear_cost(x):
         X = x.reshape((n, n))
-        return np.sum(cost_matrix * X)
+        return np.sum(np.abs(cost_matrix * X))
     cost_sd = linear_cost(x_sd)
     print()
     print("Comparison of Linear Cost Terms:")
