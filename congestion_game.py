@@ -1,5 +1,6 @@
-import numpy as np
 import argparse
+import numpy as np
+
 from optimization import steepest_descent, newton
 
 
@@ -23,7 +24,6 @@ def congestion_potential(x, N, a1, b1, a2, b2):
     potential_route1 = 0.5 * a1 * x_val ** 2 + b1 * x_val
     potential_route2 = 0.5 * a2 * x2 ** 2 + b2 * x2
     return potential_route1 + potential_route2
-
 
 def solve_congestion_game(N, a1, b1, a2, b2, alpha, tol, max_iter, max_iter_newton):
     x0 = np.array([N / 2])
@@ -61,12 +61,10 @@ def solve_congestion_game(N, a1, b1, a2, b2, alpha, tol, max_iter, max_iter_newt
     print(f"Load on route 1: {expected_x:.6f}")
     print(f"Load on route 2: {N - expected_x:.6f}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Solve the Congestion Game using Optimization Techniques.")
     args = parser.parse_args()
     solve_congestion_game(args.N, args.a1, args.b1, args.a2, args.b2, args.alpha, args.tol, args.max_iter, args.max_iter_newton)
-
 
 if __name__ == '__main__':
     main()

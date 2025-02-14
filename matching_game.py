@@ -1,7 +1,8 @@
-import numpy as np
 import argparse
-from optimization import steepest_descent, newton
+import numpy as np
+
 from scipy.optimize import linear_sum_assignment
+from optimization import steepest_descent, newton
 
 
 def matching_potential(x, n, C, mu, lam):
@@ -48,7 +49,6 @@ def matching_potential(x, n, C, mu, lam):
     penalty = penalty_rows + penalty_cols + penalty_bounds
     return cost_term + reg_term + (mu / 2.0) * penalty
 
-
 def gradient_matching_potential(x, n, C, mu, lam):
     X = x.reshape((n, n))
 
@@ -80,7 +80,6 @@ def gradient_matching_potential(x, n, C, mu, lam):
 
     return grad_total
 
-
 def hessian_matching_potential(x, n, C, mu, lam):
     X = x.reshape((n, n))
 
@@ -109,7 +108,6 @@ def hessian_matching_potential(x, n, C, mu, lam):
 
     return H
 
-
 def load_cost_matrix(file_path, n):
     """
     Loads a cost matrix from a CSV file.
@@ -125,7 +123,6 @@ def load_cost_matrix(file_path, n):
     if M.shape != (n, n):
         raise ValueError(f"Cost matrix shape {M.shape} does not match expected size ({n}, {n}).")
     return M
-
 
 def project_onto_simplex(v, z=1):
     """
@@ -151,7 +148,6 @@ def project_onto_simplex(v, z=1):
 
     return w
 
-
 def matching_projection(x, n):
     X = x.reshape((n, n))
 
@@ -163,7 +159,6 @@ def matching_projection(x, n):
     #     X[:, j] = project_onto_simplex(X[:, j])
 
     return X.flatten()
-
 
 def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_newton):
     print("Stable Matching Game")
@@ -231,7 +226,6 @@ def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_
         print(f"Newton's Method Linear Cost: {cost_newton:.6f}")
     print(f"Analytical Optimal Linear Cost: {optimal_cost:.6f}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="Stable Matching Game via Continuous Optimization.")
     args = parser.parse_args()
@@ -243,7 +237,6 @@ def main():
         cost_matrix = np.random.uniform(0, 10, size=(n, n))
 
     solve_matching_game(n, cost_matrix, args.mu, args.lam, args.alpha, args.tol, args.max_iter, args.max_iter_newton)
-
 
 if __name__ == '__main__':
     main()

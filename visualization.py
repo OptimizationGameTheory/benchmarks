@@ -1,5 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
+
 from matplotlib.colors import Normalize
 
 
@@ -19,7 +20,6 @@ def plot_congestion_distribution(x, iteration, method, N, final=False):
     ax.set_title(f'{method} - Iteration {iteration}' + (' (Final)' if final else ''))
     ax.set_ylim(0, N)
     plt.pause(0.005)
-
 
 def plot_auction_allocation(x, valuations, iteration, method, final=False):
     if iteration == 0:

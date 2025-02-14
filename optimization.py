@@ -1,4 +1,5 @@
 import numpy as np
+
 from matplotlib import pyplot as plt
 from visualization import plot_congestion_distribution, plot_auction_allocation, plot_matching_assignment
 
@@ -10,7 +11,6 @@ def gradient(f, x, h=1e-5):
         x_h[i] += h
         grad[i] = (f(x_h) - f(x)) / h
     return grad
-
 
 def hessian(f, x, h=1e-5):
     n = len(x)
@@ -39,7 +39,6 @@ def hessian(f, x, h=1e-5):
                 hess[i, j] = (f_ij - f_i_j - f_i_j_neg + f_ij_neg) / (4 * h ** 2)
     return hess
 
-
 def visualize_game(x, iteration, method, N, game_type, final=False, valuations=None):
     if game_type == 'congestion':
         plot_congestion_distribution(x, iteration, method, N, final)
@@ -51,7 +50,6 @@ def visualize_game(x, iteration, method, N, game_type, final=False, valuations=N
     if iteration % 10 == 0 or final:
         plt.savefig(f"visualizations/{game_type}_{method}_iteration_{iteration}.png")
 
-
 def backtracking_line_search(f, x, grad, alpha=0.01, rho=0.5, c=1e-4, max_iter=10):
     for _ in range(max_iter):
         if f(x - alpha * grad) > f(x) - c * alpha * np.dot(grad, grad):
@@ -59,7 +57,6 @@ def backtracking_line_search(f, x, grad, alpha=0.01, rho=0.5, c=1e-4, max_iter=1
         else:
             break
     return alpha
-
 
 def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1e-6, max_iter=1000, visualize=False,
                      N=None, valuations=None, game_type=None, projection=None):
@@ -94,7 +91,6 @@ def steepest_descent(f, x0, alpha=0.1, grad_function=gradient, convergence_tol=1
     if visualize and N is not None:
         visualize_game(x, max_iter, "Steepest Descent", N=N, valuations=valuations, game_type=game_type, final=True)
     return x
-
 
 def newton(f, x0, grad_function=gradient, hessian_function=hessian, convergence_tol=1e-6, max_iter=100, visualize=False,
            valuations=None, N=None, game_type=None, regularization=0.0, projection=None):

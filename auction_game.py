@@ -1,5 +1,8 @@
+import argparse
 import numpy as np
+
 from optimization import steepest_descent, newton
+
 
 def potential_allocation(x, valuations, mu=100.0):
     """
