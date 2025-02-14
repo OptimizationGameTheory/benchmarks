@@ -14,7 +14,7 @@
 
 ## Overview
 
-This repository presents a collection of optimization-driven implementations for classical game theoretic problems. The project focuses on three key problems:
+This project is designed for researchers and practitioners interested in the intersection of numerical optimization and game-theoretic analysis. It provides a structured framework for analyzing equilibrium conditions and optimal allocations in strategic settings using continuous optimization techniques. The repository presents a collection of optimization-driven implementations for three classical game-theoretic problems:
 
 - **Auction Design:** Optimizing revenue in auctions by allocating a divisible good among multiple bidders while enforcing individual rationality and allocation constraints.
 
@@ -22,7 +22,7 @@ This repository presents a collection of optimization-driven implementations for
 
 - **Stable Matching:** Formulating a continuous relaxation of the assignment problem to compute near-optimal matchings between two sets (e.g., men and women) while enforcing one-to-one pairing constraints.
 
-Each problem is formulated as a continuous optimization task where objective functions are minimized using numerical techniques—primarily the Steepest Descent and Newton's Methods. Analytical solutions or benchmarks (such as the Hungarian algorithm for stable matching) are used to validate the numerical results. This project is intended for researchers and practitioners interested in the interplay between optimization theory and game theory.
+Each problem is formulated as a continuous optimization task where objective functions are minimized using numerical techniques—primarily the Steepest Descent and Newton's Methods. Analytical solutions or benchmarks (such as the Hungarian algorithm for stable matching) are used to validate the numerical results.
 
 ## Dependencies
 
@@ -32,26 +32,27 @@ Each problem is formulated as a continuous optimization task where objective fun
 | Python  | ≥3.8    |
 | NumPy   | ≥1.21.0 |
 | SciPy   | ≥1.7.0  |
-| pandas  | ≥3.10.0 |
+| pandas  | ≥2.0.0 |
 | Matplotlib | ≥2.2.3 |
 
-To fulfill all the requirements, after installing Python 3.8, install the packages with:
+To install all required packages, run:
 
 ```bash
-pip3 install numpy scipy pandas matplotlib
+pip install -r requirements.txt
 ```
 
 ## Code Architecture
 
 ```sh
-optimization-game-theory/
+./
 ├── auction_game.py        # Auction design implementation
 ├── congestion_game.py     # Congestion on networks implementation
 ├── main.py                # The driver code for the results
 ├── matching_game.py       # Stable matching implementation
 ├── optimization.py        # Shared optimization routines
 ├── README.md              # Project documentation
-└── visualization.py       # Visualization tools of the project
+├── requirements.txt       # Project requirements
+└── visualization.py       # Visualization tools
 ```
 
 The `main.py` script serves as the central driver for the project, coordinating the execution of different game-theoretic experiments based on command-line arguments. It directs the flow of execution by calling the appropriate optimization routines from `optimization.py` and subsequently invokes `visualization.py` to generate convergence plots and other relevant visual outputs. This modular design ensures a reproducible workflow and facilitates a clear demonstration of the algorithmic performance across various problem settings.
@@ -62,23 +63,22 @@ The `main.py` script serves as the central driver for the project, coordinating 
 
 #### Problem Formulation
 
-We consider an auction setting where an auctioneer allocates a **divisible** good to *n* bidders, each possessing a private valuation $v_i$. The auctioneer determines the allocation $x_i$ (the fraction of the good assigned to bidder $i$) and the corresponding payment $p_i$. The objective is to maximize total revenue  
+We consider an auction setting where an auctioneer allocates a divisible good to $n$ bidders, each possessing a private valuation $v_i$. The auctioneer determines the allocation $x_i$ (the fraction of the good assigned to bidder $i$). Payments are computed at the end as $p_i = x_i v_i$. The objective is to maximize total revenue:
 ```math
-R = \sum_{i=1}^{n} p_i
+R = \sum_{i=1}^{n} p_i = \sum_{i=1}^{n} \max{(0, x_i v_i)}
 ```
-Since conventional optimization routines are designed for minimization, the problem is reformulated by minimizing the negative revenue with added penalty terms to enforce feasibility constraints:  
+Since conventional optimization routines are designed for minimization, the problem is reformulated by minimizing the negative revenue with added penalty terms to enforce feasibility constraints:
 ```math
-\Phi(z) = -\sum_{i=1}^{n} p_i + \frac{\mu}{2} \text{ (Penalty Terms)}
+\Phi(x) = -\sum_{i=1}^{n} \max{(0, x_i v_i)} + \frac{\mu}{2} \text{ (Penalty Terms)}
 ```
 where $\mu$ is a penalty parameter enforcing the constraints.
 
 The design also imposes key constraints:
 
-- **Individual Rationality:** $p_i \leq v_i \, x_i$ for each bidder.  
+- **Allocation Constraints:** Each allocation $x_i$ must be in $[0,1]$.
 
-- **Allocation Constraints:** Each allocation $x_i$ must be in $[0,1]$ and the total allocation must satisfy $\sum_{i=1}^{n} x_i \leq 1$.
+- **Total Allocation Constraint:** The total allocation must satisfy $\sum_{i=1}^{n} x_i \leq 1$.
 
-- **Nonnegative Payments:** $p_i \geq 0$.  
 The analytical optimal solution is obtained by allocating the entire good to the bidder with the highest valuation, i.e., if $i^\ast = \arg\max(v_i)$ then set $x_{i^\ast} = 1$ and $p_{i^\ast} = v_{i^\ast}$ (with all other $x_i$ and $p_i$ set to zero), yielding $R^\ast = \max(v_i)$.
 
 Numerical optimization is performed using both the Steepest Descent and Newton’s Methods. These routines iteratively minimize the potential function, with parameters such as the step size (`alpha`), convergence tolerance (`tol`), and maximum iterations adjusted to ensure reliable convergence. The numerical solution is then compared against the analytical optimal allocation to evaluate performance.
@@ -112,19 +112,16 @@ python main.py auction --valuations "15,25,30" --mu 200 --alpha 0.005 --tol 1e-8
 
 #### Problem Formulation
 
-We consider a congestion game on a network with two routes. Route 1 has a latency function given by  
+We consider a congestion game with two routes, each having latency functions:
+
 ```math
-L_1(x) = a_1 x + b_1,
+L_1(x) = a_1 x + b_1, \quad L_2(x) = a_2 x + b_2.
 ```
-and Route 2 has  
+Drivers are allocated between these routes, and equilibrium is determined by minimizing:
 ```math
-L_2(x) = a_2 x + b_2.
+\Phi(x) = \frac{1}{2} a_1 x^2 + b_1 x + \frac{1}{2} a_2 (N - x)^2 + b_2 (N - x).
 ```
-There are $N$ drivers who must be allocated between these routes. The equilibrium is determined by minimizing the potential function:  
-```math
-\Phi(x) = \frac{1}{2} a_1 x^2 + b_1 x + \frac{1}{2} a_2 (N - x)^2 + b_2 (N - x),
-```
-where $x$ represents the number of drivers on Route 1 (and $N - x$ on Route 2). The analytical equilibrium is obtained by setting the derivative to zero, leading to  
+where $x$ is the number of drivers on Route 1. The analytical equilibrium is obtained by setting the derivative to zero, leading to  
 ```math
 (a_1 + a_2)x = a_2 N + b_2 - b_1,
 ```
@@ -208,17 +205,21 @@ For example, to adjust parameters, run:
 python matching_game.py --n 6 --mu 2000 --lam 0.2 --alpha 0.0005 --max_iter 5000
 ```
 
+### Enhancements in Optimization Methods
+
+To improve numerical stability and solution feasibility, we have introduced the following enhancements:
+
+- **Backtracking Line Search in Steepest Descent:** This dynamically adjusts the step size to ensure descent and avoid instability.
+
+- **Projection in Steepest Descent and Newton’s Method:** This ensures that the iterates remain within feasible bounds, improving convergence behavior.
+
+- **Regularization in Newton’s Method:** When the Hessian is not invertible, a small regularization term is added to improve numerical stability and ensure well-conditioned updates.
+
+These modifications result in improved convergence rates, better constraint satisfaction, and enhanced robustness in optimization problems with ill-conditioned Hessians.
+
 ## Results and Discussion
 
-Our experimental analysis highlights the varying effectiveness of optimization methods across different problem domains.
-
-In the auction design problem, the steepest descent method produces a solution but exhibits extreme numerical instability, often yielding values far from the analytical optimum. This suggests that improper parameter selection—such as an overly large step size or high penalty term—leads to divergence. Careful tuning of parameters, including a smaller step size ($\alpha$) and moderate penalty coefficient ($\mu$), is necessary to stabilize convergence. Newton’s method, on the other hand, fails entirely due to an ill-conditioned Hessian, making matrix inversion impossible. This is expected, as the penalty terms introduce nontrivial nonlinearity. To address this, a small regularization term ($\epsilon I$) can be added to the Hessian before inversion, improving numerical stability and allowing Newton’s method to converge when feasible.
-
-For congestion optimization, the potential function follows a well-structured quadratic form. This allows Newton’s method to leverage second-order curvature information for rapid convergence, making it the preferred approach when computational efficiency is a priority. However, when the Hessian is poorly conditioned or computational constraints limit matrix inversion, steepest descent remains a robust alternative. While it requires more iterations, it consistently finds solutions, making it preferable in cases where stability is more important than speed. The trade-off between the two methods largely depends on resource availability and the scale of the network.
-
-The stable matching problem introduces additional challenges due to its near-linear potential function, which diminishes the advantages of Newton’s method. Without strong curvature information, Newton’s updates become unstable, leading to non-convergence. Steepest descent, while sensitive to step size selection, remains the more reliable approach. However, the continuous relaxation used in this optimization framework may introduce significant approximation errors compared to the discrete optimal solution. To improve Newton’s method’s performance in this setting, incorporating a smoothed potential function or adaptive Hessian regularization may help mitigate instability and enable better convergence.
-
-Overall, our findings underscore the importance of parameter tuning and method selection in each optimization problem. The choice between steepest descent and Newton’s method depends not only on the structure of the objective function but also on numerical stability considerations and computational feasibility.
+[Content removed for future updates]
 
 ## Future Directions
 
@@ -235,3 +236,5 @@ Extending the current models to more complex real-world applications is an impor
 
 - **Computational Enhancements:**
 To address scalability issues, future efforts could focus on parallel implementations and GPU acceleration (e.g., using CuPy) to manage large-scale problems more efficiently. Such computational improvements would allow the framework to be applied to higher-dimensional and more computationally intensive problems without compromising performance.
+
+This structured optimization framework provides a foundation for analyzing equilibrium problems with numerical techniques, bridging the gap between game theory and optimization.
