@@ -240,8 +240,11 @@ These improvements significantly enhanced performance. Newton’s method success
 | **Newton's Method** | max_iter | 0.00 |
 
 #### Visualizations
-![Steepest Descent](./results/auction_steepest_descent.gif)
-![Newton's Method](./results/auction_newton.gif)
+
+<p align="center">
+  <img src="./results/auction_steepest_descent.gif" width="48%"/>
+  <img src="./results/auction_newton.gif" width="48%"/>
+</p>
 
 ---
 
@@ -257,8 +260,11 @@ In the congestion game, both methods successfully converged to the expected equi
 | **Newton's Method** | 11         | 0.000007  |
 
 #### Visualizations
-![Steepest Descent](./results/congestion_steepest_descent.gif)
-![Newton's Method](./results/congestion_newton.gif)
+
+<p align="center">
+  <img src="./results/congestion_steepest_descent.gif" width="48%"/>
+  <img src="./results/congestion_newton.gif" width="48%"/>
+</p>
 
 ---
 
@@ -280,8 +286,10 @@ Despite these improvements, convergence was slow, particularly for steepest desc
 
 #### Visualizations
 
-![Steepest Descent](./results/matching_steepest_descent.gif)
-![Newton's Method](./results/matching_newton.gif)
+<p align="center">
+  <img src="./results/matching_steepest_descent.gif" width="48%"/>
+  <img src="./results/matching_newton.gif" width="48%"/>
+</p>
 
 ---
 
