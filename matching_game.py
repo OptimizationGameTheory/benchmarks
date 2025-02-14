@@ -127,6 +127,44 @@ def load_cost_matrix(file_path, n):
     return M
 
 
+def project_onto_simplex(v, z=1):
+    """
+    Project a vector v onto the simplex defined by sum(x) = z and 0 <= x <= 1.
+    """
+    n = len(v)
+    if np.sum(v) == z and np.alltrue((v >= 0) & (v <= 1)):
+        return v
+
+    # Sort v in descending order
+    u = np.sort(v)[::-1]
+    cssv = np.cumsum(u) - z
+    ind = np.arange(n) + 1
+    cond = u - cssv / ind > 0
+    rho = ind[cond][-1]
+    theta = cssv[cond][-1] / float(rho)
+    w = np.maximum(v - theta, 0)
+
+    w = np.minimum(w, 1)
+
+    while np.sum(w) != z:
+        w = np.maximum(w - (np.sum(w) - z) / n, 0)
+
+    return w
+
+
+def matching_projection(x, n):
+    X = x.reshape((n, n))
+
+    for i in range(n):
+        X[i] = project_onto_simplex(X[i])
+
+    # # Project each column onto the simplex
+    # for j in range(n):
+    #     X[:, j] = project_onto_simplex(X[:, j])
+
+    return X.flatten()
+
+
 def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_newton):
     print("Stable Matching Game")
     print("======================")
@@ -157,7 +195,8 @@ def solve_matching_game(n, cost_matrix, mu, lam, alpha, tol, max_iter, max_iter_
     # Solve using Newton's Method.
     print("Using Newton's Method:")
     try:
-        x_newton = newton(potential_func, x0, convergence_tol=tol, max_iter=max_iter_newton, visualize=True, N=n, game_type='matching')
+        x_newton = newton(potential_func, x0, convergence_tol=tol, max_iter=max_iter_newton, visualize=True, N=n,
+                          game_type='matching', regularization=1e-5, projection=lambda x: matching_projection(x, n))
         X_newton = x_newton.reshape((n, n))
         print("Solution from Newton's Method (assignment matrix):")
         print(X_newton)
