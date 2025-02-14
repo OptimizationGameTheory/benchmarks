@@ -33,7 +33,7 @@ def plot_auction_allocation(x, valuations, iteration, method, final=False):
     ax1.clear()
     ax2.clear()
     n = len(valuations)
-    payments = x * valuations
+    payments = np.maximum(0, x * valuations)
 
     color = 'tab:blue'
     ax1.bar(range(n), x, color=color, alpha=0.6)
@@ -52,7 +52,6 @@ def plot_auction_allocation(x, valuations, iteration, method, final=False):
     ax2.legend(['Payments'], loc='upper right')
     plt.tight_layout()
     plt.pause(0.5)
-
 
 def plot_matching_assignment(x, n, iteration, method, final=False):
     X = x.reshape((n, n))

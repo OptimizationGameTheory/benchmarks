@@ -16,7 +16,7 @@ def potential_allocation(x, valuations, mu=100.0):
     n = len(valuations)
 
     # Revenue term: Maximize sum(v_i * x_i) by minimizing -sum(v_i * x_i)
-    revenue_term = -np.sum(valuations * x)
+    revenue_term = -np.sum(np.maximum(0, x * valuations))
 
     # Penalty for allocation bounds: x_i must be between 0 and 1.
     penalty_alloc_bounds = np.sum(np.maximum(0, -x) ** 2) + np.sum(np.maximum(0, x - 1) ** 2)
@@ -78,7 +78,7 @@ def main(args):
                             game_type='auction')
     print("Steepest Descent Solution (x):", x_sd)
     print("Potential function value (Steepest Descent):", potential_func(x_sd))
-    payments_sd = x_sd * valuations
+    payments_sd = np.maximum(0, x_sd * valuations)
     revenue_sd = np.sum(payments_sd)
     print("Achieved Revenue (Steepest Descent):", revenue_sd)
     print("Payments (Steepest Descent):", payments_sd)
