@@ -5,13 +5,13 @@
 
 ## Table of Contents
 
-
 1. [Overview](#overview)
 2. [Dependencies](#dependencies)
 3. [Code Architecture](#code-architecture)
 4. [Theory and Implementations](#theory-and-implementations)
 5. [Results and Discussion](#results-and-discussion)
 6. [Future Directions](#future-directions)
+7. [Acknowledgments](#acknowledgments)
 
 ## Overview
 
@@ -301,7 +301,6 @@ Our experiments demonstrate the strengths and weaknesses of each optimization te
 
 These results underscore the importance of tailoring optimization methods to problem structure, using problem-specific adjustments to enhance convergence and solution quality.
 
-
 ## Future Directions
 
 Advancing the current framework can be approached along several complementary axes:
@@ -319,3 +318,7 @@ Extending the current models to more complex real-world applications is an impor
 To address scalability issues, future efforts could focus on parallel implementations and GPU acceleration (e.g., using CuPy) to manage large-scale problems more efficiently. Such computational improvements would allow the framework to be applied to higher-dimensional and more computationally intensive problems without compromising performance.
 
 This structured optimization framework provides a foundation for analyzing equilibrium problems with numerical techniques, bridging the gap between game theory and optimization.
+
+## Acknowledgments
+
+We would like to sincerely thank Professor Kasra Alishahi for their insightful teaching and support throughout the course. The concepts explored and discussions in class played a crucial role in shaping this project and enhancing our understanding of optimization techniques.
