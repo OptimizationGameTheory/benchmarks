@@ -30,7 +30,7 @@ def potential_allocation(x, valuations, mu=100.0):
 def analytical_optimal_solution(v):
     """
     Computes the analytical optimal allocation for the auction problem.
-
+    
     Given valuations v, the optimum is to award the entire good to the bidder with the highest v.
     
     Returns:
@@ -48,16 +48,14 @@ def auction_projection(x):
         x /= np.sum(x)  # normalize to ensure sum <= 1
     return x
 
-def main(args):
-    try:
-        v_list = [float(val.strip()) for val in args.valuations.split(',')]
-    except Exception as e:
-        raise ValueError("Error parsing valuations. Ensure they are comma-separated numbers.") from e
-    valuations = np.array(v_list)
+def solve_auction_game(valuations, mu, alpha, tol, max_iter, max_iter_newton):
+    """
+    Solves the auction game using Steepest Descent and Newton's Method.
+    """
     n = len(valuations)
 
     # Define the potential function as a lambda that depends only on x.
-    potential_func = lambda x: potential_allocation(x, valuations, mu=args.mu)
+    potential_func = lambda x: potential_allocation(x, valuations, mu=mu)
 
     # Initial guess: equal allocation
     x0 = np.ones(n) / n
@@ -69,9 +67,9 @@ def main(args):
     # Solve using Steepest Descent
     print("\n--- Running Steepest Descent ---")
     x_sd = steepest_descent(potential_func, x0,
-                            alpha=args.alpha,
-                            convergence_tol=args.tol,
-                            max_iter=args.max_iter,
+                            alpha=alpha,
+                            convergence_tol=tol,
+                            max_iter=max_iter,
                             visualize=True,
                             N=n,
                             valuations=valuations,
@@ -86,12 +84,12 @@ def main(args):
     # Solve using Newton's Method
     print("\n--- Running Newton's Method ---")
     try:
-        x_newton = newton(potential_func, x0, convergence_tol=args.tol, max_iter=args.max_iter_newton,
-                  visualize=True, N=n, valuations=valuations, game_type='auction',
-                  regularization=1e-5, projection=auction_projection)
+        x_newton = newton(potential_func, x0, convergence_tol=tol, max_iter=max_iter_newton,
+                          visualize=True, N=n, valuations=valuations, game_type='auction',
+                          regularization=1e-5, projection=auction_projection)
         print("Newton's Method Solution (x):", x_newton)
         print("Potential function value (Newton):", potential_func(x_newton))
-        payments_newton = x_newton * valuations
+        payments_newton = np.maximum(0, x_newton * valuations)
         revenue_newton = np.sum(payments_newton)
         print("Achieved Revenue (Newton):", revenue_newton)
         print("Payments (Newton):", payments_newton)
@@ -116,7 +114,7 @@ def main(args):
     else:
         print("Newton's Method did not produce a solution.")
 
-if __name__ == "__main__":
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Optimize auction design using only allocation optimization.")
@@ -128,4 +126,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_iter_newton", type=int, default=100, help="Max iterations for Newton's method")
 
     args = parser.parse_args()
-    main(args)
+    valuations = np.array([float(val.strip()) for val in args.valuations.split(',')])
+    solve_auction_game(valuations, args.mu, args.alpha, args.tol, args.max_iter, args.max_iter_newton)
+
+if __name__ == '__main__':
+    main()
