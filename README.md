@@ -219,7 +219,81 @@ These modifications result in improved convergence rates, better constraint sati
 
 ## Results and Discussion
 
-[Content removed for future updates]
+## Results and Discussion
+
+### Auction Design
+
+For the auction design problem, our initial implementation using the standard steepest descent method on a vector containing both allocations and payments resulted in a high error rate, while Newton’s method failed due to the Hessian matrix being non-invertible.
+
+To resolve these issues:
+- We removed the payments from the optimization vector, avoiding redundancy and unnecessary constraints.
+- We added a regularization term to the Hessian to ensure invertibility.
+- We applied a projection technique after each optimization step to maintain feasibility.
+
+These improvements significantly enhanced performance. Newton’s method successfully reached the optimal solution, and steepest descent achieved a near-optimal solution with minimal error.
+
+#### Auction Game Results
+
+| Method             | Iterations | Error (%) |
+|--------------------|------------|-----------|
+| **Steepest Descent** | 202        | 19.45  |
+| **Newton's Method** | max_iter | 0.00 |
+
+#### Visualizations
+![Steepest Descent](./results/auction_steepest_descent.gif)
+![Newton's Method](./results/auction_newton.gif)
+
+---
+
+### Congestion on Network
+
+In the congestion game, both methods successfully converged to the expected equilibrium. However, Newton’s method required significantly fewer iterations compared to steepest descent.
+
+#### Congestion Game Results
+
+| Method             | Iterations | Error (%) |
+|--------------------|------------|-----------|
+| **Steepest Descent** | 590        | 0.000007  |
+| **Newton's Method** | 11         | 0.000007  |
+
+#### Visualizations
+![Steepest Descent](./results/congestion_steepest_descent.gif)
+![Newton's Method](./results/congestion_newton.gif)
+
+---
+
+### Stable Matching
+
+Initially, the steepest descent method struggled to maintain feasibility, often producing values outside the valid range [0,1]. To address this:
+- We increased the penalty coefficient `mu` significantly (around 100) to enforce feasibility.
+- We implemented a backtracking algorithm to dynamically adjust the step size `alpha`.
+- For Newton’s method, we added a projection technique after each step to ensure solutions remain feasible.
+
+Despite these improvements, convergence was slow, particularly for steepest descent, which required a large number of iterations.
+
+#### Stable Matching Results
+
+| Method             | Iterations | Error (%) |
+|--------------------|------------|-----------|
+| **Steepest Descent** | max_iter | 70.16 |
+| **Newton's Method** | max_iter | 21.42 |
+
+#### Visualizations
+
+![Steepest Descent](./results/matching_steepest_descent.gif)
+![Newton's Method](./results/matching_newton.gif)
+
+---
+
+### Summary
+
+Our experiments demonstrate the strengths and weaknesses of each optimization technique across different game-theoretic problems:
+- **Newton’s method** generally converged faster but required modifications (regularization and projection) to ensure stability and feasibility.
+- **Steepest descent** was more robust but slower, often requiring parameter tuning (e.g., backtracking step size adjustment).
+- **Projection techniques** improved feasibility in constrained optimization problems, particularly in the stable matching and auction design problems.
+
+These results underscore the importance of tailoring optimization methods to problem structure, using problem-specific adjustments to enhance convergence and solution quality.
+
 
 ## Future Directions
 
