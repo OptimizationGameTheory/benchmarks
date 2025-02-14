@@ -1,6 +1,9 @@
 # MacOS Files
 .DS_Store
 
+# Visualization Files
+visualizations/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
