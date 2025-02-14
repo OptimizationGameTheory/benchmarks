@@ -5,6 +5,7 @@
 
 ## Table of Contents
 
+
 1. [Overview](#overview)
 2. [Dependencies](#dependencies)
 3. [Code Architecture](#code-architecture)
@@ -216,8 +217,6 @@ To improve numerical stability and solution feasibility, we have introduced the 
 - **Regularization in Newton’s Method:** When the Hessian is not invertible, a small regularization term is added to improve numerical stability and ensure well-conditioned updates.
 
 These modifications result in improved convergence rates, better constraint satisfaction, and enhanced robustness in optimization problems with ill-conditioned Hessians.
-
-## Results and Discussion
 
 ## Results and Discussion
 
